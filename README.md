@@ -1,4 +1,6 @@
 # EBC-controller
+This if a fork of [EBC-controller](https://github.com/JOGAsoft/EBC-controller) and an attempt to add support for the EBC-A10 while the initial version supports the A05 and A10H only.
+
 A GUI linux software to control ZTE Tech EBC series
 battery testers and electronic loads.
 
