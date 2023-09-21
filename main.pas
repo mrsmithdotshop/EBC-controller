@@ -12,7 +12,7 @@ uses
   JLabeledFloatEdit, settings, typinfo;//, LCLIntf, LCLType;
 
 const
-  cVersion = 'EBC Controller v0.10';
+  cVersion = 'EBC Controller v0.11';
 
   cstVoltage = 0;
   cstCurrent = 2;
@@ -65,6 +65,7 @@ const
   cUFactor = 'UFactor';
   cPFactor = 'PFactor';
   cModelName = 'Name_';
+  cChargeForcePacket = 'ChargeForcePacket';
 
   cDefault = 'Default';
   cChargeCurrent = 'ChargeCurrent';
@@ -135,6 +136,7 @@ type
      Ident: Integer;
      ConnState: TConnState;
      ConnPackets: TConnPacket;
+     ChargeForcePacket : integer; // AD
   end;
 
   TDeltaValue = record
@@ -326,6 +328,7 @@ type
     FPackets: array of TPacket;
 //    FConnPacket: TConnPacket;
     FPacketIndex: Integer;
+    FForcedPacketIndex : integer; // AD
     FLogFile: Text;
     FRunMode: TRunMode;
     FChecks: TChecks;
@@ -529,16 +532,18 @@ begin
   Result := APath;
 end;
 
-
 function checksum(s: string; Pos: Integer): Char; // Seems EBC uses a stupid XOR CRC
 var
   I: Integer;
 begin
   Result := #0;
+  if length(s) < Pos then exit;   // AD: sigsegv here when usb disconnects
   for I := 2 to Pos - 1 do
-  begin
     Result := Chr(Ord(Result) xor Ord(s[I]));
-  end;
+  (* AD: EBC-A20 does not accept start/stop chars as checksum
+         This happens e.g. for charge @ 4.20/4.22V, 1A and 0.1A cutoff
+         The Windows software sends $0a and $0f in that case so lets do the same here *)
+  if (Result = #$fa) or (result = #$f8) then result := char(byte(result) and $0f);
 end;
 
 { TfrmMain }
@@ -577,11 +582,15 @@ begin
         FConnState := csConnected;
         FUFactor := FModels[FModel].UFactor;
         FIFactor := FModels[FModel].IFactor;
+        if FModels[FModel].ChargeForcePacket > -1 then  // AD: EBV-A20 has no presets, voltage can be manually adjusted
+          edtChargeV.Enabled:=true
+        else
+          edtChargeV.Enabled:=false;
       end;
     end;
   end else
   begin
-    DumpChkSum('E:', r, crcrecvpos);
+    //DumpChkSum('E:', r, crcrecvpos);
   end;
   FLastTime := E;
   shpConn.Brush.Color := clDefault;
@@ -593,6 +602,8 @@ var
   P, tmp: Extended;
   dT: Integer;
   T: TDateTime;
+  chkIsValid : boolean;
+  chk : char;
 begin
   if FSampleCounter > 0 then
   begin
@@ -604,7 +615,16 @@ begin
 
   T := ANow - FStartTime;
 
-  if chkAccept.Checked or (checksum(APacket, crcrecvpos) = APacket[crcrecvpos]) then
+  chkIsValid := chkAccept.Checked;  // AD
+  if not chkIsValid then
+  begin
+    chk := checksum(APacket, crcrecvpos);
+    chkIsValid := (chk = APacket[crcrecvpos]);
+    if not chkIsValid then
+       // sometimes the EBC-A20 sends a slightly different checksum. we do accept it also!
+       if ((byte(chk) and $f0) = $f0) and ((byte(chk) and $f0) = byte(APacket[crcrecvpos])) then chkIsValid := true;
+    end;
+  if chkIsValid then
   begin
     FLastI := DecodeCurrent(Copy(APacket, 3, 2));
     FLastU := DecodeVoltage(Copy(APacket, 5, 2));
@@ -938,6 +958,26 @@ var
   N: Integer;
   s: string;
   Sec: string;
+
+  function findPacketIndex(command:string):integer;
+  var
+    i : integer;
+  begin
+     if(command = '') then
+     begin
+       result := -1; exit;
+     end;
+     for I := Low(FPackets) to High(FPackets) - 1 do
+       //writeln(format('"%S" "%S"',[command,FPackets[i].Command]));
+       if FPackets[i].Command = command then
+       begin
+         result := i;
+         exit;
+       end;
+     Application.MessageBox(pchar(format('packet "%S" not found in config file',[command])),'Error');
+     result := -1;
+  end;
+
 begin
   rgCharge.Items.Clear;
   rgDisCharge.Items.Clear;
@@ -998,6 +1038,7 @@ begin
     Inc(I);
   until N > 10; // Allow for a spacing of 10 in settings file
 
+  // read models
   SetLength(FModels, 0);
   N := 0;
   I := 0;
@@ -1018,6 +1059,7 @@ begin
         ConnPackets.Connect := GetHexPacketFromIni(ini, s, cConnect);
         ConnPackets.Disconnect := GetHexPacketFromIni(ini, s, cDisconnect);
         ConnPackets.Stop := GetHexPacketFromIni(ini, s, cStop);
+        ChargeForcePacket := findPacketIndex(UpperCase(ini.readString(s,cChargeForcePacket,'')));  // AD
       end;
     end else
     begin
@@ -1053,6 +1095,13 @@ begin
   end;
 end;
 
+function round2(const Number: extended; const Places: longint): extended;
+var t: extended;
+begin
+   t := power(10, places);
+   round2 := round(Number*t)/t;
+end;
+
 function TfrmMain.MakePacket2(Packet: Integer; SendMode: TSendMode; TestVal,
   SecondParam: Extended; ATime: Integer): string;
 var
@@ -1074,36 +1123,46 @@ begin
   end;
   if Result > '' then
   begin
-    if ATime = 250 then  //250 is a forbidden value for some reason
+
+    if (FForcedPacketIndex > -1) then     // AD: for EBC-A20
     begin
-      LTime := 249;
-     end else
-     begin
-       LTime := ATime;
-    end;
-    p3 := EncodeTimer(LTime);
-    case FPackets[Packet].TestVal of
-      tvCurrent:
+      p1 := EncodeCurrent(round2(TestVal,2));
+      p2 := EncodeVoltage(round2(edtChargeV.Value,2));  // without round we will get 4.219999999 when 4.22 is requested
+      P3 := EncodeCurrent(round2(edtCutA.Value,2));
+      doLog(format('EBC-A20 charge: I:%g U:%g ICutOff: %g',[round2(TestVal,2),round2(edtChargeV.Value,2),round2(edtCutA.Value,2)]));
+    end else
+    begin
+      if ATime = 250 then  //250 is a forbidden value for some reason
       begin
-        p1 := EncodeCurrent(TestVal);
-        if FPackets[Packet].Method = mCharge then
+        LTime := 249;
+       end else
+       begin
+         LTime := ATime;
+      end;
+      p3 := EncodeTimer(LTime);
+      case FPackets[Packet].TestVal of
+        tvCurrent:
         begin
-          p2 := Chr(0) + Chr(Round(SecondParam));
-        end else
+          p1 := EncodeCurrent(TestVal);
+          if FPackets[Packet].Method = mCharge then
+          begin
+            p2 := Chr(0) + Chr(Round(SecondParam));
+          end else
+          begin
+            p2 := EncodeVoltage(SecondParam);
+          end;
+        end;
+        tvPower:
         begin
+          p1 := EncodePower(TestVal);
           p2 := EncodeVoltage(SecondParam);
         end;
-      end;
-      tvPower:
-      begin
-        p1 := EncodePower(TestVal);
-        p2 := EncodeVoltage(SecondParam);
-      end;
-      tvResistance:
-      begin
-        T := FLastU / TestVal;
-        p1 := EncodeCurrent(T);
-        p2 := EncodeVoltage(SecondParam);
+        tvResistance:
+        begin
+          T := FLastU / TestVal;
+          p1 := EncodeCurrent(T);
+          p2 := EncodeVoltage(SecondParam);
+        end;
       end;
     end;
     Result[3] := p1[1];
@@ -1284,12 +1343,15 @@ begin
   begin
     edtChargeV.Enabled := True;
     edtCells.Enabled := False;
-    edtChargeV.Value := FPackets[I].VoltInfo;
+    //edtChargeV.Value := FPackets[I].VoltInfo;
   end else
   begin
-    edtChargeV.Enabled := False;
+    if FModels[FModel].ChargeForcePacket > -1 then  // AD: EBV-A20 has no presets, voltage can be manually adjusted
+      edtChargeV.Enabled:=true
+    else
+      edtChargeV.Enabled:=false;
     edtCells.Enabled := True;
-    edtChargeV.Value := edtCells.Value * FPackets[I].VoltInfo;
+    //edtChargeV.Value := edtCells.Value * FPackets[I].VoltInfo;
   end;
 end;
 
@@ -2031,12 +2093,19 @@ var
   s: string;
 begin
   FPacketIndex := -1;
+  FForcedPacketIndex := -1;
   if pcProgram.ActivePage = tsCharge then
   begin
     tsDisCharge.Enabled := False;
     if rgCharge.ItemIndex > -1 then
     begin;
-      FPacketIndex := GetPointer(rgCharge);
+      if FModels[FModel].ChargeForcePacket > -1 then
+      begin
+        FPacketIndex := FModels[FModel].ChargeForcePacket;
+        FForcedPacketIndex := FPacketIndex;
+        doLog(format('forced charging packet %D for model %S',[FPacketIndex,FModels[FModel].Name]));
+      end else
+        FPacketIndex := GetPointer(rgCharge);
       SetRunMode(rmCharging);
     end;
   end else if pcProgram.ActivePage = tsDischarge then
@@ -2213,6 +2282,7 @@ begin
   FShowCoulomb := False;
   FDelta[0].Time := Now;
   FDelta[1].Time := Now;
+  FForcedPacketIndex := -1;
 
   SetLength(stText, cstMax + 1);
   for I := Low(stText) to High(stText) do
@@ -2370,7 +2440,10 @@ begin
     edtChargeV.Value := FPackets[I].VoltInfo;
   end else
   begin
-    edtChargeV.Enabled := False;
+    if FModels[FModel].ChargeForcePacket > -1 then  // AD: EBV-A20 has no presets, voltage can be manually adjusted
+       edtChargeV.Enabled:=true
+    else
+        edtChargeV.Enabled:=false;
     edtCells.Enabled := True;
     edtChargeV.Value := edtCells.Value * FPackets[I].VoltInfo;
   end;

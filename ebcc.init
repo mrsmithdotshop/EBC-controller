@@ -143,6 +143,7 @@ Stop=fa 02 00 00 00 00 00 00 02 f8
 [Models]
 Name_1=EBC-A05
 Name_2=EBC-A10H
+Name_3=EBC-A20
 
 [EBC-A05]
 Ident=05
@@ -160,4 +161,12 @@ Connect=fa 05 00 00 00 00 00 00 05 F8
 Disconnect=fa 06 00 00 00 00 00 00 06 F8
 Stop=fa 02 00 00 00 00 00 00 02 f8
 
+[EBC-A20]
+Ident=09
+IFactor=1
+UFactor=1
+ChargeForcePacket=c_NiMH
+Connect=fa 05 00 00 00 00 00 00 05 F8
+Disconnect=fa 06 00 00 00 00 00 00 06 F8
+Stop=fa 02 00 00 00 00 00 00 02 f8
 
