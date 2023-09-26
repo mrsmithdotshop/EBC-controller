@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, StdCtrls, Menus,
-  SynEdit;
+  SynEdit, SynHighlighterAny;
 
 const
   cNaN = 10E999;
@@ -84,6 +84,7 @@ type
     memStep: TSynEdit;
     odOpen: TOpenDialog;
     sdSave: TSaveDialog;
+    SynStepHighlighter: TSynAnySyn;
     procedure Button1Click(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure memStepChange(Sender: TObject);

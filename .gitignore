@@ -27,7 +27,6 @@
 #
 
 # Delphi compiler-generated binaries (safe to delete)
-*.exe
 *.dll
 *.bpl
 *.bpi
@@ -71,4 +70,3 @@ modules/
 # Additional files to ignore
 .ebackup.*
 ebcc.conf
-ebcc

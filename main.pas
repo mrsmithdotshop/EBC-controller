@@ -200,13 +200,13 @@ type
     btnStart: TButton;
     btnStop: TButton;
     btnSkip: TButton;
-    Button1: TButton;
     Chart: TChart;
     ChartToolset1: TChartToolset;
     ChartToolset1ZoomMouseWheelTool1: TZoomMouseWheelTool;
     chkAccept: TCheckBox;
     chkCutCap: TCheckBox;
     chkCutEnergy: TCheckBox;
+    edtDevice: TComboBox;
     edtDelim: TEdit;
     edtTerm: TEdit;
     gbSettings: TGroupBox;
@@ -241,7 +241,6 @@ type
 
       ChartAxisTransformationsVoltageAutoScaleAxisTransform: TAutoScaleAxisTransform;
     DateTimeIntervalChartSource: TDateTimeIntervalChartSource;
-    edtDevice: TEdit;
     gbConn: TGroupBox;
     Label5: TLabel;
     lblTimer: TLabel;
@@ -264,7 +263,6 @@ type
     mniSavePNG: TMenuItem;
     pcProgram: TPageControl;
     mnPopup: TPopupMenu;
-    mnSerial: TPopupMenu;
     rgDischarge: TRadioGroup;
     rgCharge: TRadioGroup;
     sdLogCSV: TSaveDialog;
@@ -281,7 +279,6 @@ type
     tbxMonitor: TToggleBox;
     tsCharge: TTabSheet;
     tsDischarge: TTabSheet;
-    procedure Button1Click(Sender: TObject);
     procedure mniSerialClick(Sender: TObject);
     procedure pcProgramChange(Sender: TObject);
     procedure SavePNGExecute(Sender: TObject);
@@ -319,6 +316,7 @@ type
     procedure tsChargeEnter(Sender: TObject);
     procedure tsDischargeEnter(Sender: TObject);
   private
+    fChargeCVOnly: boolean;
     FConfFile: string;
     FStartTime: TDateTime;
     FStepTime: TDateTime;
@@ -360,7 +358,7 @@ type
     FDeltaIndex: Integer;
     FIntTime: Integer;
     procedure DoHexLog(AText: string);
-    function NewDecodeCharge(Data: string): Extended;
+
     procedure SerialRec(Sender: TObject);
     procedure InterpretPackage(APacket: string; ANow: TDateTime);
     procedure DumpChkSum(lbl: string; snd: string; Pos: Integer);
@@ -386,7 +384,7 @@ type
     procedure LoadStep;
     function FindPacket(AName: string): Integer;
     function GetPointer(ARadioGroup: TRadioGroup): Integer;
-    function MakePacket2(Packet: Integer; SendMode: TSendMode; TestVal, SecondParam: Extended; ATime: Integer): string;
+    function MakePacket2(Packet: Integer; SendMode: TSendMode; TestVal, SecondParam: Extended; ATime: Integer; cutoffCurrent: Extended): string;
     function MakeConnPacket(SendMode: TSendMode): string;
     procedure EBCBreak(Force: Boolean = False); // Force = True terminates even if a program is running.
     procedure LogStep;
@@ -621,7 +619,7 @@ begin
     chk := checksum(APacket, crcrecvpos);
     chkIsValid := (chk = APacket[crcrecvpos]);
     if not chkIsValid then
-       // sometimes the EBC-A20 sends a slightly different checksum. we do accept it also!
+       // sometimes the EBC-A20 sends a slightly different checksum. we do accept it also
        if ((byte(chk) and $f0) = $f0) and ((byte(chk) and $f0) = byte(APacket[crcrecvpos])) then chkIsValid := true;
     end;
   if chkIsValid then
@@ -859,22 +857,26 @@ end;
 
 function TfrmMain.DecodeCharge(Data: string): Extended;
 begin
-  Result := (Ord(Data[1])*2400 + 10*Ord(Data[2])) / 10000;
+  // AD: taken from github.com/dev-strom/esp-ebc-mqtt/blob/main/lib/commands/EbcA20.cpp
+  if (byte(Data[1]) and $80) = $80 then
+  begin
+    // capacity >= 10.0 Ah
+    if byte(Data[1]) and $0E = $0E then
+    begin
+      // capacity >= 200.0 Ah
+      //value = ((static_cast<double> ((((source >> 8) & 0x3F) * 240) + (source & 0xFF) - 0x1C00)) / 10.0);
+      result := (((byte(Data[1]) and $3F) * 240) + byte(Data[2]) - $1C00) / 10;
+    end else
+    begin
+        // capacity < 200.0 Ah
+        //value = ((static_cast<double> ((((source >> 8) & 0x7F) * 240) + (source & 0xFF) - 0x0800)) / 100.0);
+        result := (((byte(Data[1]) and $7F) * 240) + byte(Data[2]) - $0800) / 100;
+    end;
+  end else
+    // capacity < 10.0 Ah
+    Result := (byte(Data[1])*240 + byte(Data[2])) / 1000;
 end;
 
-function TfrmMain.NewDecodeCharge(Data: string): Extended;
-var
-  s: string;
-begin
-  s := Data;
-  if s[1] > #$8b then
-  begin
-    Result := 10 + (((Ord(s[1]) - $8b) + 00)*2400 + 10*Ord(s[2])) / 10000;
-  end else
-  begin
-    Result := (Ord(s[1])*2400 + 10*Ord(s[2])) / 10000;
-  end;
-end;
 
 function TfrmMain.DecodeTimer(Data: string): Integer;
 begin
@@ -887,29 +889,6 @@ begin
   WriteLn(f, ATime, ',', #9, MyFloatStr(ACurrent), ',', #9, MyFloatStr(AVoltage));
 end;
 
-{
-  Temporary code to debug capacity measurement > 10 Ah
-}
-procedure TfrmMain.Button1Click(Sender: TObject);
-var
-  I: Integer;
-  Data: string;
-  f1, f2: Extended;
-begin
-//  SetLength(Data, 2);
-  Data := '  ';
-  for I := 0 to 2 do
-  begin
-    Data[1]:= Chr(StrToInt(Copy(memStepLog.Lines.Strings[I], 1, 3)));
-    Data[2] := Chr(StrToInt(Copy(memStepLog.Lines.Strings[I], 5, 3)));
-//    memStepLog.Lines.Add(IntToHex(Ord(Data[1]), 2) + '  ' + IntToHex(Ord(Data[2]), 2));
-    f1 := DecodeCharge(Data);
-    f2 := NewDecodeCharge(Data);
-    memStepLog.Lines.Add('AsChrg: ' + FloatToStrF(f1, ffFixed, 18, 16) + ' AsNewChrg:' +
-       FloatToStrF(f2, ffFixed, 18, 16));
-  end;
-  //memStepLog.Lines.Add(FloatToStr((41*2400 + 10*255) / 10000));
-end;
 
 
 procedure TfrmMain.SaveCSV(AFile: string);
@@ -1077,24 +1056,6 @@ begin
   ini.Free;
 end;
 
-function TfrmMain.NewMakePacket(Packet: Integer; AType: TSendMode): string;
-begin
-  case FPackets[Packet].Method of
-    mCharge:
-    begin
-      Result := MakePacket2(Packet, AType, edtTestVal.Value, edtCells.Value, edtCutTime.Value);
-    end;
-    mChargeCV:
-    begin
-      Result := MakePacket2(Packet, AType, edtTestVal.Value, edtChargeV.Value, edtCutTime.Value);
-    end;
-    mDischarge:
-    begin
-      Result := MakePacket2(Packet, AType, edtTestVal.Value, edtCutV.Value, edtCutTime.Value);
-    end;
-  end;
-end;
-
 function round2(const Number: extended; const Places: longint): extended;
 var t: extended;
 begin
@@ -1102,8 +1063,30 @@ begin
    round2 := round(Number*t)/t;
 end;
 
+
+function TfrmMain.NewMakePacket(Packet: Integer; AType: TSendMode): string;
+begin
+  case FPackets[Packet].Method of
+    mCharge:
+    begin
+      if fChargeCVOnly then
+        Result := MakePacket2(Packet, AType, edtTestVal.Value, edtChargeV.Value, edtCutTime.Value, round2(edtCutA.Value,2))
+      else
+        Result := MakePacket2(Packet, AType, edtTestVal.Value, edtCells.Value, edtCutTime.Value, 0);
+    end;
+    mChargeCV:
+    begin
+      Result := MakePacket2(Packet, AType, edtTestVal.Value, edtChargeV.Value, edtCutTime.Value, round2(edtCutA.Value,2));
+    end;
+    mDischarge:
+    begin
+      Result := MakePacket2(Packet, AType, edtTestVal.Value, edtCutV.Value, edtCutTime.Value, 0);
+    end;
+  end;
+end;                                   //round2(edtChargeV.Value,2)
+
 function TfrmMain.MakePacket2(Packet: Integer; SendMode: TSendMode; TestVal,
-  SecondParam: Extended; ATime: Integer): string;
+  SecondParam: Extended; ATime: Integer; cutoffCurrent : Extended): string;
 var
   p1, p2, p3: string;
   T: Extended;
@@ -1123,12 +1106,12 @@ begin
   end;
   if Result > '' then
   begin
-
     if (FForcedPacketIndex > -1) then     // AD: for EBC-A20
     begin
-      p1 := EncodeCurrent(round2(TestVal,2));
-      p2 := EncodeVoltage(round2(edtChargeV.Value,2));  // without round we will get 4.219999999 when 4.22 is requested
-      P3 := EncodeCurrent(round2(edtCutA.Value,2));
+      // TODO: make steps work, number of cells
+      p1 := EncodeCurrent(round2(TestVal,2));      // current
+      p2 := EncodeVoltage(round2(SecondParam,2));  // voltage without round we will get 4.219999999 when 4.22 is requested
+      P3 := EncodeCurrent(cutoffCurrent);
       doLog(format('EBC-A20 charge: I:%g U:%g ICutOff: %g',[round2(TestVal,2),round2(edtChargeV.Value,2),round2(edtCutA.Value,2)]));
     end else
     begin
@@ -1359,19 +1342,13 @@ procedure TfrmMain.EnumerateSerial;
 const
   cDevicePath = '/dev';
 var
-  M: TMenuItem;
   S: TSearchRec;
 begin
   if FindFirst(FormatPath(cDevicePath + PathDelim + 'tty*'), faAnyFile, S) = 0 then
   begin
     repeat
       if (Pos('ttyS', S.Name) > 0) or (Pos('ttyUSB', S.Name) > 0 ) then
-      begin
-        M := TMenuItem.Create(Self);
-        M.Caption := FormatPath(cDevicePath + PathDelim + S.Name);
-        M.OnClick := @mniSerialClick;
-        mnSerial.Items.Add(M);
-      end;
+        edtDevice.Items.Add(S.Name);
     until FindNext(S) <> 0;
   end;
   FindClose(S);
@@ -1590,22 +1567,6 @@ begin
   end;
   edtDevice.Text := ini.ReadString(cAppSec, cSerial, '/dev/ttyUSB0');
 
-  Found := False;
-  for I := 0 to mnSerial.Items.Count - 1 do
-  begin
-    if edtDevice.Text = mnSerial.Items.Items[I].Caption then
-    begin
-      Found := True;
-      Break;
-    end;
-  end;
-  if not Found then
-  begin
-    if mnSerial.Items.Count > -1 then
-    begin
-      edtDevice.Text := mnSerial.Items.Items[0].Caption;
-    end;
-  end;
   ini.Free;
   SetSettings;
 end;
@@ -1845,7 +1806,7 @@ begin
         case Mode of
           rmCharging:
           begin
-            if FPackets[I].Method = mChargeCV then
+            if (FPackets[I].Method = mChargeCV) or ((FPackets[I].Method = mCharge) and fChargeCVOnly) then
             begin
               P2 := CV;
             end else
@@ -1969,7 +1930,7 @@ begin
           FSampleCounter := 0;
           DoLog('Autooff char: ' + IntToHex(Ord(FPackets[FPacketIndex].AutoOff[1]), 2));
           FStartU := FLastU;
-          SendData(MakePacket2(I, smStart, TestVal, P2, CutTime));
+          SendData(MakePacket2(I, smStart, TestVal, P2, CutTime, CutAmp));
         end;
       end else
       begin
@@ -2004,7 +1965,6 @@ begin
       btnStart.Enabled := True;
       FLastU := 0;
       shpConn.Visible := True;
-      mnSerial.Items.Enabled := False;
     end else
     begin
       SendData(MakeConnPacket(smDisconnect));
@@ -2015,7 +1975,6 @@ begin
       FConnState := csNone;
       FModel := -1;
       Serial.Close;
-      mnSerial.Items.Enabled := True;
     end;
   except
     ShowMessage('Could not connect to ' + edtDevice.Text);
@@ -2103,9 +2062,13 @@ begin
       begin
         FPacketIndex := FModels[FModel].ChargeForcePacket;
         FForcedPacketIndex := FPacketIndex;
+        fChargeCVOnly := true;             // AD: for A20
         doLog(format('forced charging packet %D for model %S',[FPacketIndex,FModels[FModel].Name]));
       end else
+      begin
         FPacketIndex := GetPointer(rgCharge);
+        fChargeCVOnly := false;
+      end;
       SetRunMode(rmCharging);
     end;
   end else if pcProgram.ActivePage = tsDischarge then

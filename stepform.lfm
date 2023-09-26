@@ -11,7 +11,7 @@ object frmStep: TfrmStep
   Menu = MainMenu1
   OnCreate = FormCreate
   Position = poDefault
-  LCLVersion = '2.0.0.4'
+  LCLVersion = '2.2.6.0'
   inline memStep: TSynEdit
     Left = 5
     Height = 324
@@ -28,6 +28,7 @@ object frmStep: TfrmStep
     Gutter.MouseActions = <>
     RightGutter.Width = 0
     RightGutter.MouseActions = <>
+    Highlighter = SynStepHighlighter
     Keystrokes = <    
       item
         Command = ecUp
@@ -453,6 +454,7 @@ object frmStep: TfrmStep
     MouseTextActions = <>
     MouseSelActions = <>
     Lines.Strings = (
+      '// Example'
       'c_pb cells=6 curr=2.0 cuta=1A cap=0.05 time=1m'
       'wait 1m'
       'd_cc curr=3A cutv=11V time=1m'
@@ -520,7 +522,7 @@ object frmStep: TfrmStep
     Height = 25
     Top = 444
     Width = 75
-    Caption = 'Ok'
+    Caption = '&Ok'
     ModalResult = 1
     OnClick = Button1Click
     TabOrder = 1
@@ -528,7 +530,7 @@ object frmStep: TfrmStep
   object Memo1: TMemo
     Left = 5
     Height = 109
-    Top = 4
+    Top = 0
     Width = 740
     Enabled = False
     Font.Height = -11
@@ -546,8 +548,8 @@ object frmStep: TfrmStep
     TabOrder = 2
   end
   object MainMenu1: TMainMenu
-    left = 202
-    top = 234
+    Left = 202
+    Top = 234
     object MenuItem1: TMenuItem
       Caption = '&File'
       object mniNew: TMenuItem
@@ -622,13 +624,56 @@ object frmStep: TfrmStep
   object sdSave: TSaveDialog
     DefaultExt = '.stp'
     Filter = 'Step files|*.stp|All files|*.*'
-    left = 107
-    top = 375
+    Left = 107
+    Top = 375
   end
   object odOpen: TOpenDialog
     DefaultExt = '.stp'
     Filter = 'Step files|*.stp|All files|*.*'
-    left = 223
-    top = 370
+    Left = 223
+    Top = 370
+  end
+  object SynStepHighlighter: TSynAnySyn
+    Enabled = False
+    CommentAttri.Foreground = clNavy
+    Comments = [csCStyle]
+    DetectPreprocessor = False
+    IdentifierChars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz'
+    KeyWords.Strings = (
+      'C_AC'
+      'C_CCCV'
+      'C_LIFE'
+      'C_LIPO'
+      'C_NICD'
+      'C_NIMH'
+      'C_PB'
+      'D_CC'
+      'D_CP'
+      'D_CR'
+      'LOOP'
+      'WAIT'
+    )
+    Constants.Strings = (
+      'CAP'
+      'CAPI'
+      'CELLS'
+      'CURR'
+      'CUTA'
+      'CUTAT'
+      'CUTV'
+      'ENEI'
+      'ENERGY'
+      'POWER'
+      'RES'
+      'TIME'
+      'VOLT'
+    )
+    NumberAttri.Foreground = clGreen
+    Markup = False
+    Entity = False
+    DollarVariables = False
+    ActiveDot = False
+    Left = 424
+    Top = 291
   end
 end
