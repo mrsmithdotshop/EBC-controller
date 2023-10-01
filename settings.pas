@@ -14,20 +14,22 @@ const
   cRememberAutoLog = 2;
   cRememberStepDir = 3;
   cForceMon = 4;
-  cCaptureSettings = 5;
+  cLogRecData = 5;
+  cIgnoreCRC = 6;
 
 type
 
   { TfrmSettings }
 
   TfrmSettings = class(TForm)
-    Button1: TButton;
+    CancelButton: TButton;
+    OkButton: TButton;
     cgSettings: TCheckGroup;
     edtProgFile: TFileNameEdit;
     grpParam: TGroupBox;
     edtIntTime: TJLabeledIntegerEdit;
     rgStart: TRadioGroup;
-    procedure Button1Click(Sender: TObject);
+    procedure OkButtonClick(Sender: TObject);
     procedure cgSettingsClick(Sender: TObject);
     procedure cgSettingsItemClick(Sender: TObject; Index: integer);
     procedure FormCreate(Sender: TObject);
@@ -52,7 +54,7 @@ begin
   edtProgFile.Enabled := cgSettings.Checked[cAutoLoad];
 end;
 
-procedure TfrmSettings.Button1Click(Sender: TObject);
+procedure TfrmSettings.OkButtonClick(Sender: TObject);
 begin
   if edtIntTime.Value < 2 then edtIntTime.Value := 2;
 end;
@@ -64,7 +66,7 @@ end;
 
 procedure TfrmSettings.FormCreate(Sender: TObject);
 begin
-  cgSettings.CheckEnabled[cCaptureSettings] := False;
+  //cgSettings.CheckEnabled[cCaptureSettings] := False;
 end;
 
 procedure TfrmSettings.FormShow(Sender: TObject);

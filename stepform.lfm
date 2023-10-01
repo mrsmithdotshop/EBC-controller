@@ -1,22 +1,22 @@
 object frmStep: TfrmStep
-  Left = 494
-  Height = 500
+  Left = 533
+  Height = 562
   Top = 266
-  Width = 750
+  Width = 994
   BorderIcons = [biSystemMenu]
-  BorderStyle = bsSingle
   Caption = 'Unsaved'
-  ClientHeight = 473
-  ClientWidth = 750
+  ClientHeight = 562
+  ClientWidth = 994
   Menu = MainMenu1
   OnCreate = FormCreate
   Position = poDefault
-  LCLVersion = '2.2.6.0'
+  LCLVersion = '3.0.0.1'
   inline memStep: TSynEdit
     Left = 5
-    Height = 324
-    Top = 117
-    Width = 740
+    Height = 379
+    Top = 152
+    Width = 1028
+    Anchors = [akTop, akLeft, akRight, akBottom]
     Font.Height = -13
     Font.Name = 'Monospace'
     Font.Pitch = fpFixed
@@ -517,32 +517,36 @@ object frmStep: TfrmStep
       end
     end
   end
-  object Button1: TButton
-    Left = 670
+  object OkButton: TButton
+    Left = 921
     Height = 25
-    Top = 444
-    Width = 75
+    Top = 533
+    Width = 67
+    Anchors = [akRight, akBottom]
     Caption = '&Ok'
-    ModalResult = 1
-    OnClick = Button1Click
+    OnClick = OkButtonClick
     TabOrder = 1
   end
   object Memo1: TMemo
-    Left = 5
-    Height = 109
+    Left = 0
+    Height = 150
     Top = 0
-    Width = 740
+    Width = 997
+    Align = alLeft
+    Anchors = [akTop, akLeft, akRight]
+    Constraints.MaxHeight = 150
     Enabled = False
     Font.Height = -11
     Font.Name = 'Monospace'
     Lines.Strings = (
-      'Charge:    c_[NiMH|NiCd|LiPo|LiFe|Ac|CCCV] Cells=n Curr=I [CutA=I|Cap=C|Energy=W|Time=t|CutAt=t]'
+      'Charge:    c_[NiMH|NiCd|LiPo|LiFe|PB|CCCV] Cells=n Curr=I [CutA=I|Cap=C|Energy=W|Time=t|CutAt=t] [Volt=u]'
       'Discharge: d_[CC|CP|CR] [Curr=I|Power=P|Res=R] CutV=U [Cap=C|Energy=W|Time=t]'
       'Wait:      Wait t (minutes)'
       'Loop:      Loop [CapI|EneI] n - run steps n more times. CapI/EneI - run as long dis. capacity increases'
       'Cutoffs:   [c/d] CutA=current(A) CutC=capacity(Ah) Energy=energy(Wh) Time=(minutes) CutAt=(minutes)'
       'Examples:  c_NiMH Cells=4 Curr=0.75 CutA=0.2 Time=180'
       '           d_CR Res=10 CutV=2.8 Energy=6 Time=360'
+      'Note: A20 and A40 requires charging voltage (chargers have no presets like A5 and A10), may be set via ini file e.g. for LiPo'
     )
     ParentFont = False
     TabOrder = 2
