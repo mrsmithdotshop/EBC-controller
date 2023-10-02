@@ -1,7 +1,7 @@
 object frmMain: TfrmMain
-  Left = 311
+  Left = 422
   Height = 783
-  Top = 117
+  Top = 155
   Width = 1170
   Caption = 'EBC controller'
   ClientHeight = 783
@@ -9,102 +9,8 @@ object frmMain: TfrmMain
   Menu = MainMenu
   OnClose = FormClose
   OnCreate = FormCreate
-  PopupMenu = mnPopup
   Position = poDefault
   LCLVersion = '3.0.0.1'
-  object Chart: TChart
-    AnchorSideLeft.Control = Owner
-    AnchorSideTop.Control = Owner
-    AnchorSideRight.Control = gbSettings
-    Left = 0
-    Height = 685
-    Top = 0
-    Width = 890
-    AxisList = <    
-      item
-        Grid.Color = clGray
-        TickColor = clBlue
-        AxisPen.Color = clBlue
-        Marks.LabelFont.Color = clBlue
-        Marks.Format = '%0:2.2fV'
-        Marks.Frame.Color = clBlue
-        Marks.LabelBrush.Style = bsClear
-        Marks.Range.UseMin = True
-        Marks.Style = smsCustom
-        Minors = <        
-          item
-            Intervals.Count = 1
-            Intervals.MinLength = 5
-            Intervals.Options = [aipUseCount, aipUseMinLength]
-            TickColor = clMaroon
-            Marks.LabelBrush.Style = bsClear
-          end>
-        Range.Max = 10
-        Range.UseMin = True
-        Title.LabelFont.Orientation = 900
-        Title.Caption = '[V]'
-        Title.LabelBrush.Style = bsClear
-        Transformations = ChartAxisTransformationsVoltage
-      end    
-      item
-        Alignment = calBottom
-        Marks.Format = '%2:s'
-        Marks.LabelBrush.Style = bsClear
-        Marks.OverlapPolicy = opHideNeighbour
-        Marks.Source = DateTimeIntervalChartSource
-        Marks.Style = smsLabel
-        Minors = <>
-        Title.Caption = 'Time'
-        Title.LabelBrush.Style = bsClear
-      end    
-      item
-        Alignment = calRight
-        Marks.LabelFont.Color = clRed
-        Marks.Format = '%0:2.2fA'
-        Marks.LabelBrush.Style = bsClear
-        Marks.Style = smsCustom
-        Minors = <>
-        Range.UseMin = True
-        Title.Caption = '[A]'
-        Title.LabelBrush.Style = bsClear
-        Transformations = ChartAxisTransformationsCurrent
-      end>
-    BackColor = clWhite
-    Foot.Brush.Color = clBtnFace
-    Foot.Font.Color = clBlue
-    Title.Brush.Color = clBtnFace
-    Title.Font.Color = clBlue
-    Title.Text.Strings = (
-      'TAChart'
-    )
-    Toolset = ChartToolset1
-    Anchors = [akTop, akLeft, akRight, akBottom]
-    Color = clWhite
-    object lsCurrent: TLineSeries
-      Title = 'A'
-      AxisIndexX = 1
-      AxisIndexY = 2
-      LinePen.Color = clRed
-      LinePen.Width = 2
-    end
-    object lsVoltage: TLineSeries
-      Title = 'V'
-      AxisIndexX = 1
-      AxisIndexY = 0
-      LinePen.Color = clBlue
-      LinePen.Width = 2
-    end
-    object lsInvisibleCurrent: TLineSeries
-      AxisIndexX = 1
-      AxisIndexY = 2
-      LinePen.Color = clWhite
-    end
-    object lsInvisibleVoltage: TLineSeries
-      AxisIndexX = 1
-      AxisIndexY = 0
-      LinePen.Color = clWhite
-    end
-  end
   object gbSettings: TGroupBox
     AnchorSideTop.Side = asrBottom
     AnchorSideRight.Control = Owner
@@ -120,7 +26,6 @@ object frmMain: TfrmMain
     ClientWidth = 278
     Constraints.MaxWidth = 280
     Constraints.MinHeight = 448
-    PopupMenu = mnPopup
     TabOrder = 0
     object btnStart: TButton
       Left = 8
@@ -618,37 +523,10 @@ object frmMain: TfrmMain
     Height = 311
     Top = 0
     Width = 280
-    Anchors = [akTop, akLeft, akRight, akBottom]
+    Anchors = [akTop, akRight, akBottom]
     Caption = 'Status'
     Constraints.MaxWidth = 280
     TabOrder = 1
-  end
-  object memStepLog: TMemo
-    AnchorSideLeft.Side = asrBottom
-    AnchorSideTop.Control = Chart
-    AnchorSideTop.Side = asrBottom
-    AnchorSideRight.Control = gbSettings
-    AnchorSideBottom.Control = Owner
-    AnchorSideBottom.Side = asrBottom
-    Left = 0
-    Height = 98
-    Top = 685
-    Width = 890
-    Anchors = [akTop, akLeft, akRight, akBottom]
-    Font.Height = -11
-    Font.Name = 'Liberation Mono'
-    Lines.Strings = (
-      ' Step    CMD        (Ah)     (Wh)        Time  StartV  EndV'
-      '111:111|C_NiMH   |999.999|999.999|DDD:HH:MM:SS|12.000|16.000'
-      '111:112|WAIT 9999|       |       |            |16.000|15.000'
-      '111:113|LOOP 9998|       |       |            |      |'
-      '111:111|C_NiMH   |999.999|999.999|DDD:HH:MM:SS|12.000|16.000'
-      '111:112|WAIT 9999|       |       |            |16.000|15.000'
-      '111:113|LOOP 9998|       |       |            |      |'
-    )
-    ParentFont = False
-    ScrollBars = ssVertical
-    TabOrder = 3
   end
   object stRunMode: TStaticText
     Left = 62
@@ -660,7 +538,137 @@ object frmMain: TfrmMain
     Font.Color = clMoneyGreen
     ParentFont = False
     ParentColor = False
+    TabOrder = 2
+  end
+  object GraphStepslogPanel: TPanel
+    Left = 8
+    Height = 816
+    Top = 0
+    Width = 882
+    Anchors = [akTop, akLeft, akRight, akBottom]
+    ClientHeight = 816
+    ClientWidth = 882
     TabOrder = 4
+    object Chart: TChart
+      Left = 1
+      Height = 587
+      Top = 1
+      Width = 880
+      AxisList = <      
+        item
+          Grid.Color = clGray
+          TickColor = clBlue
+          AxisPen.Color = clBlue
+          Marks.LabelFont.Color = clBlue
+          Marks.Format = '%0:2.2fV'
+          Marks.Frame.Color = clBlue
+          Marks.LabelBrush.Style = bsClear
+          Marks.Range.UseMin = True
+          Marks.Style = smsCustom
+          Minors = <          
+            item
+              Intervals.Count = 1
+              Intervals.MinLength = 5
+              Intervals.Options = [aipUseCount, aipUseMinLength]
+              TickColor = clMaroon
+              Marks.LabelBrush.Style = bsClear
+            end>
+          Range.Max = 10
+          Range.UseMin = True
+          Title.LabelFont.Orientation = 900
+          Title.Caption = '[V]'
+          Title.LabelBrush.Style = bsClear
+          Transformations = ChartAxisTransformationsVoltage
+        end      
+        item
+          Alignment = calBottom
+          Marks.Format = '%2:s'
+          Marks.LabelBrush.Style = bsClear
+          Marks.OverlapPolicy = opHideNeighbour
+          Marks.Source = DateTimeIntervalChartSource
+          Marks.Style = smsLabel
+          Minors = <>
+          Title.Caption = 'Time'
+          Title.LabelBrush.Style = bsClear
+        end      
+        item
+          Alignment = calRight
+          Marks.LabelFont.Color = clRed
+          Marks.Format = '%0:2.2fA'
+          Marks.LabelBrush.Style = bsClear
+          Marks.Style = smsCustom
+          Minors = <>
+          Range.UseMin = True
+          Title.Caption = '[A]'
+          Title.LabelBrush.Style = bsClear
+          Transformations = ChartAxisTransformationsCurrent
+        end>
+      BackColor = clWhite
+      Foot.Brush.Color = clBtnFace
+      Foot.Font.Color = clBlue
+      Title.Brush.Color = clBtnFace
+      Title.Font.Color = clBlue
+      Title.Text.Strings = (
+        'TAChart'
+      )
+      Toolset = ChartToolset1
+      Align = alTop
+      Color = clWhite
+      object lsCurrent: TLineSeries
+        Title = 'A'
+        AxisIndexX = 1
+        AxisIndexY = 2
+        LinePen.Color = clRed
+        LinePen.Width = 2
+      end
+      object lsVoltage: TLineSeries
+        Title = 'V'
+        AxisIndexX = 1
+        AxisIndexY = 0
+        LinePen.Color = clBlue
+        LinePen.Width = 2
+      end
+      object lsInvisibleCurrent: TLineSeries
+        AxisIndexX = 1
+        AxisIndexY = 2
+        LinePen.Color = clWhite
+      end
+      object lsInvisibleVoltage: TLineSeries
+        AxisIndexX = 1
+        AxisIndexY = 0
+        LinePen.Color = clWhite
+      end
+    end
+    object Splitter1: TSplitter
+      Cursor = crVSplit
+      Left = 1
+      Height = 4
+      Top = 588
+      Width = 880
+      Align = alTop
+      ResizeAnchor = akTop
+    end
+    object memStepLog: TMemo
+      Left = 1
+      Height = 223
+      Top = 592
+      Width = 880
+      Align = alClient
+      Font.Height = -11
+      Font.Name = 'Liberation Mono'
+      Lines.Strings = (
+        ' Step    CMD        (Ah)     (Wh)        Time  StartV  EndV'
+        '111:111|C_NiMH   |999.999|999.999|DDD:HH:MM:SS|12.000|16.000'
+        '111:112|WAIT 9999|       |       |            |16.000|15.000'
+        '111:113|LOOP 9998|       |       |            |      |'
+        '111:111|C_NiMH   |999.999|999.999|DDD:HH:MM:SS|12.000|16.000'
+        '111:112|WAIT 9999|       |       |            |16.000|15.000'
+        '111:113|LOOP 9998|       |       |            |      |'
+      )
+      ParentFont = False
+      ScrollBars = ssVertical
+      TabOrder = 1
+    end
   end
   object MainStatusBar: TStatusBar
     Left = 0
@@ -731,54 +739,6 @@ object frmMain: TfrmMain
     Left = 312
     Top = 80
     object ChartToolset1ZoomMouseWheelTool1: TZoomMouseWheelTool
-    end
-  end
-  object mnPopup: TPopupMenu
-    Left = 192
-    Top = 263
-    object mniSavePNG: TMenuItem
-      Caption = 'Save to &PNG...'
-      ShortCut = 113
-      OnClick = mniSavePNGClick
-    end
-    object mniSaveCSV: TMenuItem
-      Caption = 'Save to &CSV...'
-      ShortCut = 16467
-      OnClick = mniSaveCSVClick
-    end
-    object N1: TMenuItem
-      Caption = '-'
-    end
-    object mniDoLog: TMenuItem
-      Caption = '&Auto log'
-      Checked = True
-      OnClick = mniDoLogClick
-    end
-    object mniSetCSVLogfile: TMenuItem
-      Caption = 'Set CSV &Log file...'
-    end
-    object N2: TMenuItem
-      Caption = '-'
-    end
-    object mniLoadStep: TMenuItem
-      Caption = 'Load step file'
-      ShortCut = 114
-      OnClick = mniLoadStepClick
-    end
-    object N3: TMenuItem
-      Caption = '-'
-    end
-    object mniSetName: TMenuItem
-      Caption = 'Set taskbar name'
-      ShortCut = 115
-      OnClick = mniSetNameClick
-    end
-    object N4: TMenuItem
-      Caption = '-'
-    end
-    object mniSettings: TMenuItem
-      Caption = '&Settings'
-      ShortCut = 120
     end
   end
   object sdCSV: TSaveDialog
@@ -879,6 +839,7 @@ object frmMain: TfrmMain
       end
       object mm_AutoLog: TMenuItem
         Caption = '&Auto Log'
+        OnClick = mm_AutoLogClick
       end
     end
     object mmm_Step: TMenuItem
@@ -913,5 +874,11 @@ object frmMain: TfrmMain
         Caption = '&About'
       end
     end
+  end
+  object ReconnectTimer: TTimer
+    Enabled = False
+    OnTimer = ReconnectTimerTimer
+    Left = 686
+    Top = 399
   end
 end

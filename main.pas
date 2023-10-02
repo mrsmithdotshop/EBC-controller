@@ -14,6 +14,8 @@ uses
 const
   cVersion = 'EBC Controller v1.12';
 
+  cConnectRetries = 10;
+
   cstVoltage = 0;
   cstCurrent = 2;
   cstPower = 1;
@@ -113,10 +115,12 @@ const
   cSerial = 'Serial';
 
   cFatal = 'Fatal Error';
+  cError = 'Error';
 
   cst_ConnectionState = 0;
   cst_ConnectionStatus = 1;
   cst_ConnectedModel = 2;
+  cst_LogFileName = 3;
 
 
   // Log table headers
@@ -258,6 +262,7 @@ type
     mmm_Step: TMenuItem;
     mm_AutoLog: TMenuItem;
     mm_setCsvLogFile: TMenuItem;
+    GraphStepslogPanel: TPanel;
     Separator2: TMenuItem;
     mm_saveCsv: TMenuItem;
     mm_savePng: TMenuItem;
@@ -272,19 +277,7 @@ type
     Separator1: TMenuItem;
     mm_Disconnect: TMenuItem;
     mm_Connect: TMenuItem;
-    mniSetName: TMenuItem;
-    N4: TMenuItem;
-    mniLoadStep: TMenuItem;
-    N3: TMenuItem;
-    mniSettings: TMenuItem;
-    N2: TMenuItem;
-    mniDoLog: TMenuItem;
-    mniSetCSVLogfile: TMenuItem;
-    N1: TMenuItem;
-    mniSaveCSV: TMenuItem;
-    mniSavePNG: TMenuItem;
     pcProgram: TPageControl;
-    mnPopup: TPopupMenu;
     rgDischarge: TRadioGroup;
     rgCharge: TRadioGroup;
     sdLogCSV: TSaveDialog;
@@ -293,14 +286,17 @@ type
     Serial: TLazSerial;
     shaCapI: TShape;
     MainStatusBar: TStatusBar;
+    Splitter1: TSplitter;
     stRunMode: TStaticText;
     stStepFile: TStaticText;
+    ReconnectTimer: TTimer;
     tsConsole: TTabSheet;
     tmrWait: TTimer;
     tsProgram: TTabSheet;
     tbxMonitor: TToggleBox;
     tsCharge: TTabSheet;
     tsDischarge: TTabSheet;
+    procedure mm_AutoLogClick(Sender: TObject);
     procedure mm_ConnectClick(Sender: TObject);
     procedure mm_QuitClick(Sender: TObject);
     procedure mm_saveCsvClick(Sender: TObject);
@@ -311,9 +307,9 @@ type
     procedure mm_taskBarNameClick(Sender: TObject);
     procedure mniDoLogClick(Sender: TObject);
     procedure pcProgramChange(Sender: TObject);
+    procedure ReconnectTimerTimer(Sender: TObject);
     procedure SavePNGExecute(Sender: TObject);
     procedure btnAdjustClick(Sender: TObject);
-    procedure btnConnectClick(Sender: TObject);
     procedure btnContClick(Sender: TObject);
     procedure btnProgClick(Sender: TObject);
     procedure btnSkipClick(Sender: TObject);
@@ -386,6 +382,7 @@ type
     FDelta: array [0..1] of TDeltaValue;
     FDeltaIndex: Integer;
     FIntTime: Integer;
+    FConnectRetryCountdown: Integer;
     procedure DoHexLog(AText: string);
 
     procedure SerialRec(Sender: TObject);
@@ -635,6 +632,7 @@ begin
         FModel := GetModelIndex(Ord(r[17]));
         if FModel > -1 then
         begin
+          ReconnectTimer.Enabled:=false;
           setStatusLine(cst_ConnectionStatus,cConnected);
           setStatusLine(cst_ConnectedModel,FModels[FModel].Name);
 
@@ -733,7 +731,7 @@ begin
         vTime := DecodeTimer(Copy(APacket, 15, 2));
         vVoltage := FLastU;
         vCurrent := FLastI;
-        if mniDoLog.Checked then
+        if mm_AutoLog.Checked then
           SaveCSVLine(FLogFile, vTime, FLastI, FLastU);
       end;
       lsVoltage.AddXY(T, FLastU);
@@ -1294,12 +1292,12 @@ begin
   FChecks.TimerRunning := False;
   SendData(MakeConnPacket(smConnStop));
   RunModeOffOrMonitor;
-  if mniDoLog.Checked then
+  if mm_AutoLog.Checked then
   begin
     Flush(FLogFile);
     CloseFile(FLogFile);
   end;
-  mniDoLog.Enabled := True;
+  mm_AutoLog.Enabled := True;
   if FInProgram then
   begin
     LogStep;
@@ -1672,11 +1670,9 @@ begin
   ini.WriteInteger(cSettings, cIntTime, frmSettings.edtIntTime.Value);
 
   for I := 0 to frmSettings.cgSettings.Items.Count - 1 do
-  begin
     ini.WriteBool(cSettings, cChkSetting + '_' + IntToStr(I), frmSettings.cgSettings.Checked[I]);
-  end;
-  ini.WriteBool(cSettings, cMonitor, tbxMonitor.Checked);
 
+  ini.WriteBool(cSettings, cMonitor, tbxMonitor.Checked);
 
   ini.WriteBool(cAppSec, cWinMaximized, (frmMain.WindowState = wsMaximized));
   ini.WriteInteger(cAppSec, cWinWidth, frmMain.Width);
@@ -1789,15 +1785,12 @@ end;
 
 procedure TfrmMain.StartLogging;
 begin
-  if mniDoLog.Checked then
+  if mm_AutoLog.Checked then
   begin
     if sdLogCSV.FileName > '' then
-    begin
-      AssignFile(FLogFile, sdLogCSV.FileName);
-    end else
-    begin
-      mniDoLog.Checked := False;
-    end;
+      AssignFile(FLogFile, sdLogCSV.FileName)
+    else
+      mm_AutoLog.Checked := False;
   end;
 end;
 
@@ -1820,12 +1813,8 @@ function TfrmMain.GetPointer(ARadioGroup: TRadioGroup): Integer;
 begin
   Result := -1;
   if Assigned(ARadioGroup) then
-  begin
     if ARadioGroup.ItemIndex > -1 then
-    begin
       Result := Integer(Pointer(ARadioGroup.Items.Objects[ARadioGroup.ItemIndex]));
-    end;
-  end;
 end;
 
 
@@ -2011,6 +2000,20 @@ begin
   end;
 end;
 
+
+procedure TfrmMain.ReconnectTimerTimer(Sender: TObject);
+begin
+  dec(FConnectRetryCountdown);
+  if (FConnectRetryCountdown > 0) then
+  Begin
+    SendData(MakeConnPacket(smConnect));
+  end else
+  begin
+    mm_ConnectClick(Sender);
+    Application.MessageBox('Unable to connect - timeout',cError,MB_ICONSTOP);
+  end;
+end;
+
 procedure TfrmMain.mm_ConnectClick(Sender: TObject);
 begin
   try
@@ -2031,9 +2034,12 @@ begin
         mm_Disconnect.Enabled:=true;
         btnStart.Enabled := True;
         FLastU := 0;
+        FConnectRetryCountdown := cConnectRetries;
+        ReconnectTimer.Enabled:= true;
       end;
     end else
     begin
+      ReconnectTimer.Enabled:= false;
       SendData(MakeConnPacket(smDisconnect));
       setStatusLine(cst_ConnectionStatus,cNotConnected);
       setStatusLine(cst_ConnectedModel,'');
@@ -2053,9 +2059,9 @@ begin
   end;
 end;
 
-procedure TfrmMain.btnConnectClick(Sender: TObject);
+procedure TfrmMain.mm_AutoLogClick(Sender: TObject);
 begin
-
+  mm_AutoLog.Checked := not mm_AutoLog.Checked;
 end;
 
 procedure TfrmMain.btnContClick(Sender: TObject);
@@ -2098,9 +2104,8 @@ end;
 
 procedure TfrmMain.mm_setCsvLogFileClick(Sender: TObject);
 begin
-  if sdLogCSV.Execute then
-  begin
-  end;
+  sdLogCSV.Execute;
+  setStatusLine(cst_LogFileName,sdLogCSV.FileName);
 end;
 
 procedure TfrmMain.mm_SettingsClick(Sender: TObject);
@@ -2144,6 +2149,7 @@ begin
     2: btnStart.Enabled := Length(frmStep.memStep.Text) > 2;
   end;
 end;
+
 
 procedure TfrmMain.btnProgClick(Sender: TObject);
 begin
@@ -2228,7 +2234,7 @@ begin
     FCurrentCapacity[caEBC] := 0;
     FCurrentDisCapacity := 0;
     FEnergy := 0;
-    mniDoLog.Enabled := False;
+    mm_AutoLog.Enabled := False;
     FreezeEdits;
     FIntTime := frmSettings.edtIntTime.Value * 1000;
     FStartTime := Now;
@@ -2419,9 +2425,8 @@ begin
   LoadSettings;
 //  SetSettings;
   if sdLogCSV.FileName = '' then
-  begin
-    mniDoLog.Checked := False;
-  end;
+    mm_AutoLog.Checked := False;
+
   OffSetting;
   rgCharge.OnClick := @rgChargeClick;
   rgDischarge.OnClick := @rgDischargeClick;
