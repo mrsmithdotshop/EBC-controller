@@ -5,6 +5,7 @@ Start=fa 21 00 00 00 00 00 00 00 f8
 Cont=fa 28 00 00 00 00 00 00 00 f8
 AutoOff=16
 Type=Charge
+Models=1,2
 
 [2]
 Command=c_NiCd
@@ -13,6 +14,7 @@ Start=fa 31 00 00 00 00 00 00 00 f8
 Cont=fa 38 00 00 00 00 00 00 00 f8
 AutoOff=17
 Type=Charge
+Models=1,2
 
 [4]
 Command=c_LiPo
@@ -22,6 +24,7 @@ Cont=fa 48 00 00 00 00 00 00 00 f8
 AutoOff=18
 Type=Charge
 CellVoltageInfo=4.2
+Models=1,2
 
 [5]
 Command=c_LiFe
@@ -31,6 +34,7 @@ Cont=fa 58 00 00 00 00 00 00 00 f8
 AutoOff=19
 Type=Charge
 CellVoltageInfo=3.65
+Models=1,2
 
 [6]
 Command=c_Pb
@@ -40,6 +44,7 @@ Cont=fa 68 00 00 00 00 00 00 00 f8
 AutoOff=1a
 Type=Charge
 CellVoltageInfo=2.4
+Models=1,2
 
 [7]
 Command=c_CCCV
@@ -49,6 +54,7 @@ Cont=fa 78 00 00 00 00 00 00 00 f8
 AutoOff=1b
 Type=ChargeCV
 CellVoltageInfo=5
+Models=1,2
 
 [9]
 Command=d_CC
@@ -59,6 +65,7 @@ Cont=fa 08 00 00 00 00 00 00 00 f8
 AutoOff=14
 Type=Discharge
 TestVal=I
+Models=1,2,3,4
 
 [10]
 Command=d_CP
@@ -68,6 +75,7 @@ Cont=fa 18 00 00 00 00 00 00 00 f8
 Type=Discharge
 AutoOff=15
 TestVal=P
+Models=1,2,3,4
 
 [11]
 Command=d_CR
@@ -78,62 +86,69 @@ Cont=fa 08 00 00 00 00 00 00 00 f8
 AutoOff=ff
 Type=Discharge
 TestVal=R
+Models=1,2,3,4
 
-[12]
+[15]
+Command=c_LiPo
+Name=LiPo - Lithium Ion or Polymer
+Start=fa 21 00 00 00 00 00 00 00 f8
+Cont=fa 28 00 00 00 00 00 00 00 f8
+AutoOff=02
+Type=ChargeCV
+CellVoltageInfo=4.2
+Models=3,4
+EnableNumCells=1
+
+[16]
+Command=c_LiFe
+Name=LiFe - Lithium Iron Phosphate
+Start=fa 21 00 00 00 00 00 00 00 f8
+Cont=fa 28 00 00 00 00 00 00 00 f8
+AutoOff=02
+Type=ChargeCV
+CellVoltageInfo=3.65
+Models=3,4
+EnableNumCells=1
+
+[17]
+Command=c_Pb
+Name=PbAc - Lead Acid
+Start=fa 21 00 00 00 00 00 00 00 f8
+Cont=fa 28 00 00 00 00 00 00 00 f8
+AutoOff=02
+Type=ChargeCVCellVoltageInfo=2.4
+Models=3,4
+CellVoltageInfo=2,26
+EnableNumCells=1
+
+[18]
+Command=c_CCCV
+Name=CCCV - CC and CV charging
+Start=fa 21 00 00 00 00 00 00 00 f8
+Cont=fa 28 00 00 00 00 00 00 00 f8
+AutoOff=02
+Type=ChargeCV
+CellVoltageInfo=4.2
+EnableNumCells=1
+Models=3,4
+
+[20]
 Command=Wait
 Type=Control
 
-[13]
+[21]
 Command=Loop
 Type=Control
 
 [Default]
-ChargeCurrent=0.06
-DischargeCurrent=0.06
+ChargeCurrent=0.5
+DischargeCurrent=1
 ConstantVoltage=5.00
 DischargePower=1.00
 DischargeResistance=10
 Cells=1
 ModeCommand=d_CC
 ReadOnly=1
-
-[Startup]
-StartSelection=0
-
-[Selection_0]
-String=Load last settings
-
-[Selection_1]
-String=Load default settings
-ChargeIndex=-1
-DischargeIndex=1
-TabIndex=1
-Cells=1
-TestVal=1
-CutOffA=0
-CutOffATime=0
-MaxTime=0
-CutOffV=1
-ReadOnly=1
-
-[Selection_2]
-String=Load section 2
-ReadOnly=0
-
-[Selection_3]
-String=Load section 3
-ReadOnly=0
-
-[Settings]
-CheckSetting_0=0
-CheckSetting_1=1
-CheckSetting_2=1
-CheckSetting_3=1
-ProgFile=
-CheckSetting_4=1
-CheckSetting_5=0
-IntegrationTime=60
-Monitor=1
 
 [Conn]
 Connect=fa 05 00 00 00 00 00 00 05 F8
@@ -144,6 +159,7 @@ Stop=fa 02 00 00 00 00 00 00 02 f8
 Name_1=EBC-A05
 Name_2=EBC-A10H
 Name_3=EBC-A20
+Name_4=EBC-A40
 
 [EBC-A05]
 Ident=05
@@ -152,6 +168,9 @@ UFactor=1
 Connect=fa 05 00 00 00 00 00 00 05 F8
 Disconnect=fa 06 00 00 00 00 00 00 06 F8
 Stop=fa 02 00 00 00 00 00 00 02 f8
+MaxChargeVoltage=10
+MaxChargeCurrent=3
+MaxDischargeCurrent=5
 
 [EBC-A10H]
 Ident=06
@@ -160,6 +179,9 @@ UFactor=1
 Connect=fa 05 00 00 00 00 00 00 05 F8
 Disconnect=fa 06 00 00 00 00 00 00 06 F8
 Stop=fa 02 00 00 00 00 00 00 02 f8
+MxChargeCurrent=3
+MaxChargeVoltage=22
+MaxDischargeCurrent=10
 
 [EBC-A20]
 Ident=09
@@ -169,4 +191,22 @@ ChargeForcePacket=c_NiMH
 Connect=fa 05 00 00 00 00 00 00 05 F8
 Disconnect=fa 06 00 00 00 00 00 00 06 F8
 Stop=fa 02 00 00 00 00 00 00 02 f8
+CommandFormat=1
+MaxChargeVoltage=30
+MaxChargeCurrent=5
+MaxDischargeCurrent=20
+
+
+[EBC-A40]
+Ident=10
+IFactor=1
+UFactor=1
+ChargeForcePacket=c_NiMH
+Connect=fa 05 00 00 00 00 00 00 05 F8
+Disconnect=fa 06 00 00 00 00 00 00 06 F8
+Stop=fa 02 00 00 00 00 00 00 02 f8
+CommandFormat=1
+MaxChargeVoltage=5
+MaxChargeCurrent=40
+MaxDischargeCurrent=40
 

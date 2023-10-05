@@ -1,6 +1,6 @@
 unit main;
 
-{$mode objfpc}{$H+}
+{$mode objfpc}{$H+}{$I-}
 
 interface
 
@@ -9,7 +9,7 @@ uses
   EditBtn, ComCtrls, Menus, Buttons, ActnList, TAGraph, TASeries,
   TAIntervalSources, TATransformations, TATools, LazSerial, DateUtils,
   TACustomSeries, SynEdit, StepForm, MyIniFile, JLabeledIntegerEdit, math,
-  JLabeledFloatEdit, settings, typinfo, types, lcltype, connectform;//, LCLIntf, LCLType;
+  JLabeledFloatEdit, settings, typinfo, types, lcltype, connectform, aboutform;//, LCLIntf, LCLType;
 
 const
   cVersion = 'EBC Controller v1.12';
@@ -58,6 +58,7 @@ const
   cStart = 'Start';
   cCont = 'Cont';
   cTestVal = 'TestVal';
+  cEnableNumCells = 'EnableNumCells';
   cAutoOff = 'AutoOff';
   cVoltInfo = 'CellVoltageInfo';
 
@@ -68,6 +69,9 @@ const
   cPFactor = 'PFactor';
   cModelName = 'Name_';
   cCommandFormat = 'CommandFormat';
+  cMaxChargeVoltage = 'MaxChargeVoltage';
+  cMaxChargeCurrent = 'MaxChargeCurrent';
+  cMaxDischargeCurrent = 'MaxDischargeCurrent';
 
   cDefault = 'Default';
   cChargeCurrent = 'ChargeCurrent';
@@ -102,11 +106,13 @@ const
   cConf = '.conf';
   cInit = '.init';
   cSaveDir = 'SaveDir';
-  cLogDir = 'LogDir';
-  cStepDir = 'StepFileDir';
+  cLogDir   = 'LogDir';
+  cStepDir  = 'StepFileDir';
   cTabIndex = 'TabIndex';
   cReadOnly = 'ReadOnly';
-  cMonitor = 'Monitor';
+  cMonitor  = 'Monitor';
+  cAutoLog  = 'AutoLog';
+  cAutoCsvFileName  = 'AutoCsvFileName';
 
   cWinMaximized = 'Maximized';
   cWinWidth = 'Width';
@@ -148,7 +154,10 @@ type
      Ident: Integer;
      ConnState: TConnState;
      ConnPackets: TConnPacket;
-     CommandFormat : integer; // AD
+     CommandFormat : integer;
+     MaxChargeVoltage: Extended;
+     MaxChargeCurrent: Extended;
+     MaxDischargeCurrent: Extended;
   end;
 
   TDeltaValue = record
@@ -175,6 +184,7 @@ type
     TestVal: TTestVal;
     VoltInfo: Extended;
     SupportedModels : TIntegerDynArray;
+    EnableNumCells : boolean; // for cccv A20/A40
   end;
 
 
@@ -257,6 +267,7 @@ type
     MainMenu: TMainMenu;
     memLog: TMemo;
     memStepLog: TMemo;
+    mm_AutoCsvFileName: TMenuItem;
     mm_stepEdit: TMenuItem;
     mm_stepLoad: TMenuItem;
     mmm_Step: TMenuItem;
@@ -296,6 +307,8 @@ type
     tbxMonitor: TToggleBox;
     tsCharge: TTabSheet;
     tsDischarge: TTabSheet;
+    procedure mm_AboutClick(Sender: TObject);
+    procedure mm_AutoCsvFileNameClick(Sender: TObject);
     procedure mm_AutoLogClick(Sender: TObject);
     procedure mm_ConnectClick(Sender: TObject);
     procedure mm_QuitClick(Sender: TObject);
@@ -308,7 +321,6 @@ type
     procedure mniDoLogClick(Sender: TObject);
     procedure pcProgramChange(Sender: TObject);
     procedure ReconnectTimerTimer(Sender: TObject);
-    procedure SavePNGExecute(Sender: TObject);
     procedure btnAdjustClick(Sender: TObject);
     procedure btnContClick(Sender: TObject);
     procedure btnProgClick(Sender: TObject);
@@ -350,7 +362,6 @@ type
     FData: array of TCSVData;
     FAppDir: string;
     FPackets: array of TPacket;
-//    FConnPacket: TConnPacket;
     FPacketIndex: Integer;
     FLogFile: Text;
     FRunMode: TRunMode;
@@ -409,7 +420,8 @@ type
     procedure SetupChecks;
     procedure FixLabels(APacket: Integer);
     procedure DoLog(AText: string);
-    procedure StartLogging;
+    function StartLogging : boolean;
+    procedure StopLogging;
     procedure LoadStep;
     function FindPacket(AName: string): Integer;
     function GetPointer(ARadioGroup: TRadioGroup): Integer;
@@ -1059,6 +1071,7 @@ begin
         Name := ini.ReadString(Sec, cName, 'Noname');
         AutoOff := GetHexPacketFromIni(ini, Sec, cAutoOff, 'FF');
         VoltInfo := ini.ReadFloat(Sec, cVoltInfo, 0);
+        EnableNumCells := ini.ReadBool(sec,cEnableNumCells,false);
         try
           ini.ReadIntegers(Sec, cModels, SupportedModels);
         except
@@ -1133,6 +1146,9 @@ begin
         ConnPackets.Disconnect := GetHexPacketFromIni(ini, s, cDisconnect);
         ConnPackets.Stop := GetHexPacketFromIni(ini, s, cStop);
         CommandFormat := ini.ReadInteger(s, cCommandFormat, 0);
+        MaxChargeVoltage := ini.ReadFloat(s,cMaxChargeVoltage,0);
+        MaxChargeCurrent := ini.ReadFloat(s,cMaxChargeCurrent,0);
+        MaxDischargeCurrent := ini.ReadFloat(s,cMaxDischargeCurrent,0);
       end;
     end else
     begin
@@ -1174,10 +1190,19 @@ end;
 
 
 function TfrmMain.NewMakePacket(Packet: Integer; AType: TSendMode): string;
+var
+  numCells : integer;
 begin
   case FPackets[Packet].Method of
     mCharge    : Result := MakePacket2(Packet, AType, edtTestVal.Value, edtCells.Value, edtCutTime.Value, round2(edtCutA.Value,2));
-    mChargeCV  : Result := MakePacket2(Packet, AType, edtTestVal.Value, edtChargeV.Value, edtCutTime.Value, round2(edtCutA.Value,2));
+    mChargeCV  : begin
+                   if FPackets[Packet].EnableNumCells then              // A20/A40
+                      numCells := edtCells.Value
+                   else
+                      numCells := 1;
+                   if numCells < 1 then numCells := 1;
+                   Result := MakePacket2(Packet, AType, edtTestVal.Value, edtChargeV.Value * numCells, edtCutTime.Value, round2(edtCutA.Value,2));
+                 end;
     mDischarge : Result := MakePacket2(Packet, AType, edtTestVal.Value, edtCutV.Value, edtCutTime.Value, 0);
   end;
 end;
@@ -1293,11 +1318,9 @@ begin
   SendData(MakeConnPacket(smConnStop));
   RunModeOffOrMonitor;
   if mm_AutoLog.Checked then
-  begin
-    Flush(FLogFile);
-    CloseFile(FLogFile);
-  end;
-  mm_AutoLog.Enabled := True;
+    StopLogging;
+
+  //mm_AutoLog.Enabled := True;
   if FInProgram then
   begin
     LogStep;
@@ -1414,7 +1437,7 @@ begin
   if I >-1 then if FPackets[I].Method = mChargeCV then
   begin
     edtChargeV.Enabled := True;
-    edtCells.Enabled := False;
+    edtCells.Enabled := FPackets[I].EnableNumCells;
     //edtChargeV.Value := FPackets[I].VoltInfo;
   end else
   begin
@@ -1428,12 +1451,9 @@ end;
 procedure TfrmMain.RunModeOffOrMonitor;
 begin
   if tbxMonitor.Checked then
-  begin
-    SetRunMode(rmMonitor);
-  end else
-  begin
+    SetRunMode(rmMonitor)
+  else
     SetRunMode(rmNone);
-  end;
 end;
 
 procedure TfrmMain.SetRunMode(ARunMode: TRunMode);
@@ -1637,6 +1657,8 @@ begin
     frmMain.WindowState := wsMaximized;
   end;
   frmconnect.edtDevice.Text := ini.ReadString(cAppSec, cSerial, '/dev/ttyUSB0');
+  mm_AutoLog.Checked := ini.readBool(cAppSec, cAutoLog, false);
+  mm_AutoCsvFileName.Checked := ini.readBool(cAppSec, cAutoCsvFileName, true);
 
   ini.Free;
   SetSettings;
@@ -1678,6 +1700,8 @@ begin
   ini.WriteInteger(cAppSec, cWinWidth, frmMain.Width);
   ini.WriteInteger(cAppSec, cWinHeight, frmMain.Height);
   ini.WriteString(cAppSec, cSerial, frmconnect.edtDevice.Text);
+  ini.WriteBool(cAppSec, cAutoLog, mm_AutoLog.Checked);
+  ini.WriteBool(cAppSec, cAutoCsvFileName, mm_AutoCsvFileName.Checked);
   ini.Free;
 end;
 
@@ -1783,15 +1807,61 @@ begin
 //  SendMessage(memLog.Handle, WM_VSCROLL, SB_BOTTOM, 0);
 end;
 
-procedure TfrmMain.StartLogging;
+function TfrmMain.StartLogging : boolean;
+var
+  fileName,fileDir : string;
+  err : integer;
 begin
+  // TODO: emlpement aut logging
+  result := false;
   if mm_AutoLog.Checked then
   begin
-    if sdLogCSV.FileName > '' then
-      AssignFile(FLogFile, sdLogCSV.FileName)
-    else
-      mm_AutoLog.Checked := False;
-  end;
+    if mm_AutoCsvFileName.Checked then
+    begin
+      // build a file name
+      fileName := FormatDateTime('YYYYMMDD_HHMMSS',Now)+'.csv';
+      fileDir := sdLogCSV.InitialDir;
+      if Length(fileDir) > 0 then
+      begin
+        if fileDir[length(fileDir)] <> PathDelim then fileDir := fileDir + PathDelim;
+        fileName := fileDir + fileName;
+      end else
+        fileName := ExpandFileName(fileName);
+    end else
+      fileName := sdLogCSV.FileName;
+
+    if length(fileName) < 1 then
+    begin
+      Application.MessageBox('AutoLog is defined but neither a log file name nor Auto CSV Filename is specified',cError,MB_ICONSTOP);
+      exit;
+    end;
+
+    if FileExists(fileName) then
+      if MessageDlg('File Exists',format('file %s already exists'+#13+'Overwrite File ?',[fileName]), mtConfirmation,[mbYes, mbNo],0) <> mrYes then
+        exit;
+
+    // open log file
+    InOutRes := 0;
+    AssignFile(FLogFile, fileName);
+    rewrite(FLogFile);
+    err := ioresult;
+    if (err <> 0) then
+    begin
+       Application.MessageBox(pchar(Format('unable to create logfile %s (%d)',[fileName,err])),cError,MB_ICONSTOP);
+       exit;
+    end;
+    setStatusLine(cst_LogFileName,fileName);
+    result := true;
+  end else
+    exit(true);
+end;
+
+procedure TfrmMain.StopLogging;
+begin
+  InOutRes := 0;
+  Flush(FLogFile);
+  CloseFile(FLogFile);
+  setStatusLine(cst_LogFileName,'');
 end;
 
 function TfrmMain.FindPacket(AName: string): Integer;
@@ -1838,9 +1908,8 @@ begin
     DoSend := True;
     DoUpdate := True;
     if FSteps[FCurrentStep].Mode in [rmDischarging, rmDischargingCR] then
-    begin
       FCurrentDisCapacity := FCurrentCapacity[caEBC];
-    end;
+
     FCurrentStep := FProgramStep;
     FEnergy := 0;
     FCurrentCapacity[caLocal] := 0;
@@ -2032,7 +2101,7 @@ begin
         RunModeOffOrMonitor;
         mm_Connect.Enabled:=false;
         mm_Disconnect.Enabled:=true;
-        btnStart.Enabled := True;
+        //btnStart.Enabled := True;
         FLastU := 0;
         FConnectRetryCountdown := cConnectRetries;
         ReconnectTimer.Enabled:= true;
@@ -2064,6 +2133,22 @@ begin
   mm_AutoLog.Checked := not mm_AutoLog.Checked;
 end;
 
+procedure TfrmMain.mm_AboutClick(Sender: TObject);
+var t : TfrmAbout;
+begin
+  try
+    t := TfrmAbout.Create(Self);
+    t.ShowModal;
+  finally
+    t.free;
+  end;
+end;
+
+procedure TfrmMain.mm_AutoCsvFileNameClick(Sender: TObject);
+begin
+  mm_AutoCsvFileName.Checked:=not mm_AutoCsvFileName.Checked;
+end;
+
 procedure TfrmMain.btnContClick(Sender: TObject);
 var
   s: string;
@@ -2078,10 +2163,6 @@ var
 begin
   s := NewMakePacket(FPacketIndex, smAdjust);
   SendData(s);
-end;
-
-procedure TfrmMain.SavePNGExecute(Sender: TObject);
-begin
 end;
 
 
@@ -2105,7 +2186,7 @@ end;
 procedure TfrmMain.mm_setCsvLogFileClick(Sender: TObject);
 begin
   sdLogCSV.Execute;
-  setStatusLine(cst_LogFileName,sdLogCSV.FileName);
+ // setStatusLine(cst_LogFileName,sdLogCSV.FileName);
 end;
 
 procedure TfrmMain.mm_SettingsClick(Sender: TObject);
@@ -2181,22 +2262,59 @@ begin
   FPacketIndex := -1;
   if pcProgram.ActivePage = tsCharge then
   begin
-    tsDisCharge.Enabled := False;
+    if edtCutA.Value >= edtTestVal.Value then
+    begin
+      Application.MessageBox(pchar(Format('Cutoff current (%fA) is greater or equal to charage current (%fA)',[edtCutA.Value,edtTestVal.Value])),cError,MB_ICONSTOP);
+      exit;
+    end;
+
+//    cMaxChargeVoltage = 'MaxChargeVoltage';
+//  cMaxChargeCurrent = 'MaxChargeCurrent';
+//  cM
+
     if rgCharge.ItemIndex > -1 then
     begin;
       FPacketIndex := GetPointer(rgCharge);
+      if FModel >= 0 then
+      begin
+        if FModels[FModel].MaxChargeCurrent > 0 then
+          if FModels[FModel].MaxChargeCurrent < edtTestVal.Value then
+          Begin
+            Application.MessageBox(pchar(Format('Charge current (%fA) exceeds the maximum supported by %s (%fA)',[edtTestVal.Value,FModels[FModel].Name,FModels[FModel].MaxChargeCurrent])),cError,MB_ICONSTOP);
+            exit;
+          end;
+        if FModels[FModel].MaxChargeVoltage > 0 then
+          if FModels[FModel].MaxChargeVoltage < edtChargeV.Value then
+          Begin
+            Application.MessageBox(pchar(Format('Charge voltage (%fV) exceeds the maximum supported by %s (%fV)',[edtChargeV.Value,FModels[FModel].Name,FModels[FModel].MaxChargeVoltage])),cError,MB_ICONSTOP);
+            exit;
+          end;
+      end;
+      if not StartLogging then exit;
+      tsDisCharge.Enabled := False;
       SetRunMode(rmCharging);
     end;
   end else if pcProgram.ActivePage = tsDischarge then
   begin
-    tsCharge.Enabled := False;
+    if FModel >= 0 then
+    begin
+      if FModels[FModel].MaxDischargeCurrent > 0 then
+        if FModels[FModel].MaxDischargeCurrent < edtTestVal.Value then
+        Begin
+          Application.MessageBox(pchar(Format('Discharge current (%fA) exceeds the maximum supported by %s (%fA)',[edtTestVal.Value,FModels[FModel].Name,FModels[FModel].MaxDischargeCurrent])),cError,MB_ICONSTOP);
+          exit;
+        end;
+    end;
     if rgDisCharge.ItemIndex > -1 then
     begin;
+      if not StartLogging then exit;
       FPacketIndex := GetPointer(rgDisCharge);
+      tsCharge.Enabled := False;
       SetRunMode(rmDischarging);
     end;
   end else if pcProgram.ActivePage = tsProgram then
   begin
+    if not StartLogging then exit;
     frmStep.Compile;
     frmStep.memStep.Enabled := False;
     btnProg.Caption := cView;
@@ -2226,7 +2344,7 @@ begin
     lsInvisibleVoltage.Clear;
     lsInvisibleCurrent.Clear;
     SetupChecks;
-    StartLogging;
+    //StartLogging;
     FSampleCounter := 0;
     FDeltaIndex := 0;
     FLastDisCapacity := -1;
@@ -2248,7 +2366,8 @@ begin
       FStartU := FLastU;
       SendData(s);
     end;
-  end;
+  end else
+    StopLogging;
 end;
 
 procedure TfrmMain.btnStopClick(Sender: TObject);
@@ -2424,8 +2543,6 @@ begin
   LoadPackets;
   LoadSettings;
 //  SetSettings;
-  if sdLogCSV.FileName = '' then
-    mm_AutoLog.Checked := False;
 
   OffSetting;
   rgCharge.OnClick := @rgChargeClick;
@@ -2481,7 +2598,7 @@ begin
   begin
     btnStart.Enabled := True;
     edtChargeV.Enabled := True;
-    edtCells.Enabled := False;
+    edtCells.Enabled := FPackets[I].EnableNumCells;
     edtChargeV.Value := FPackets[I].VoltInfo;
   end else
   begin

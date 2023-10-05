@@ -42,7 +42,7 @@ object frmMain: TfrmMain
       Height = 25
       Top = 396
       Width = 75
-      Caption = 'Sto&p'
+      Caption = 'St&op'
       OnClick = btnStopClick
       TabOrder = 8
     end
@@ -71,10 +71,10 @@ object frmMain: TfrmMain
       Height = 305
       Top = -1
       Width = 280
-      ActivePage = tsCharge
+      ActivePage = tsDischarge
       Anchors = [akTop, akLeft, akRight, akBottom]
       Constraints.MaxWidth = 280
-      TabIndex = 0
+      TabIndex = 1
       TabOrder = 0
       OnChange = pcProgramChange
       object tsCharge: TTabSheet
@@ -96,7 +96,7 @@ object frmMain: TfrmMain
           ChildSizing.ShrinkVertical = crsScaleChilds
           ChildSizing.Layout = cclLeftToRightThenTopToBottom
           ChildSizing.ControlsPerLine = 1
-          ClientHeight = 134
+          ClientHeight = 116
           ClientWidth = 268
           ItemIndex = 4
           Items.Strings = (
@@ -209,7 +209,7 @@ object frmMain: TfrmMain
           ChildSizing.ShrinkVertical = crsScaleChilds
           ChildSizing.Layout = cclLeftToRightThenTopToBottom
           ChildSizing.ControlsPerLine = 1
-          ClientHeight = 103
+          ClientHeight = 121
           ClientWidth = 268
           ItemIndex = 0
           Items.Strings = (
@@ -687,7 +687,6 @@ object frmMain: TfrmMain
         Width = 100
       end    
       item
-        Alignment = taRightJustify
         Width = 50
       end>
     SimplePanel = False
@@ -818,7 +817,7 @@ object frmMain: TfrmMain
       end
     end
     object mmm_Data: TMenuItem
-      Caption = '&Data'
+      Caption = 'D&ata'
       ShortCut = 16454
       object mm_savePng: TMenuItem
         Caption = 'Save to &png'
@@ -841,6 +840,10 @@ object frmMain: TfrmMain
         Caption = '&Auto Log'
         OnClick = mm_AutoLogClick
       end
+      object mm_AutoCsvFileName: TMenuItem
+        Caption = 'Auto CSV &Filename'
+        OnClick = mm_AutoCsvFileNameClick
+      end
     end
     object mmm_Step: TMenuItem
       Caption = 'S&teps'
@@ -856,7 +859,7 @@ object frmMain: TfrmMain
       end
     end
     object mmm_Settings: TMenuItem
-      Caption = '&Settings'
+      Caption = 'S&ettings'
       object mm_Settings: TMenuItem
         Caption = '&Settings'
         ShortCutKey2 = 120
@@ -872,6 +875,7 @@ object frmMain: TfrmMain
       Caption = '&Help'
       object mm_About: TMenuItem
         Caption = '&About'
+        OnClick = mm_AboutClick
       end
     end
   end
