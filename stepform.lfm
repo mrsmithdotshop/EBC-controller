@@ -1,22 +1,23 @@
 object frmStep: TfrmStep
-  Left = 533
-  Height = 562
-  Top = 266
+  Left = 388
+  Height = 557
+  Top = 398
   Width = 994
   BorderIcons = [biSystemMenu]
   Caption = 'Unsaved'
-  ClientHeight = 562
+  ClientHeight = 557
   ClientWidth = 994
   Menu = MainMenu1
   OnCreate = FormCreate
   Position = poDefault
-  LCLVersion = '3.0.0.1'
+  LCLVersion = '3.0.0.2'
   inline memStep: TSynEdit
     Left = 5
-    Height = 379
-    Top = 152
+    Height = 334
+    Top = 192
     Width = 1028
     Anchors = [akTop, akLeft, akRight, akBottom]
+    Enabled = False
     Font.Height = -13
     Font.Name = 'Monospace'
     Font.Pitch = fpFixed
@@ -461,6 +462,7 @@ object frmStep: TfrmStep
       'loop 3'
     )
     VisibleSpecialChars = [vscSpace, vscTabAtLast]
+    ReadOnly = True
     ScrollBars = ssVertical
     SelectedColor.BackPriority = 50
     SelectedColor.ForePriority = 50
@@ -520,12 +522,12 @@ object frmStep: TfrmStep
   object OkButton: TButton
     Left = 921
     Height = 25
-    Top = 533
+    Top = 528
     Width = 67
     Anchors = [akRight, akBottom]
     Caption = '&Ok'
-    OnClick = OkButtonClick
     TabOrder = 1
+    OnClick = OkButtonClick
   end
   object Memo1: TMemo
     Left = 0
@@ -538,18 +540,38 @@ object frmStep: TfrmStep
     Enabled = False
     Font.Height = -11
     Font.Name = 'Monospace'
-    Lines.Strings = (
-      'Charge:    c_[NiMH|NiCd|LiPo|LiFe|PB|CCCV] Cells=n Curr=I [CutA=I|Cap=C|Energy=W|Time=t|CutAt=t] [Volt=u]'
-      'Discharge: d_[CC|CP|CR] [Curr=I|Power=P|Res=R] CutV=U [Cap=C|Energy=W|Time=t]'
-      'Wait:      Wait t (minutes)'
-      'Loop:      Loop [CapI|EneI] n - run steps n more times. CapI/EneI - run as long dis. capacity increases'
-      'Cutoffs:   [c/d] CutA=current(A) CutC=capacity(Ah) Energy=energy(Wh) Time=(minutes) CutAt=(minutes)'
-      'Examples:  c_NiMH Cells=4 Curr=0.75 CutA=0.2 Time=180'
-      '           d_CR Res=10 CutV=2.8 Energy=6 Time=360'
-      'Note: A20 and A40 requires charging voltage (chargers have no presets like A5 and A10), may be set via ini file e.g. for LiPo'
-    )
     ParentFont = False
     TabOrder = 2
+  end
+  object DevicePanel: TPanel
+    Left = 0
+    Height = 42
+    Top = 152
+    Width = 992
+    ClientHeight = 42
+    ClientWidth = 992
+    TabOrder = 3
+    object edtDevice: TComboBox
+      Left = 80
+      Height = 35
+      Top = 3
+      Width = 128
+      AutoComplete = True
+      AutoCompleteText = [cbactEnabled, cbactEndOfLineComplete, cbactSearchAscending]
+      AutoDropDown = True
+      ItemHeight = 0
+      Style = csDropDownList
+      TabOrder = 0
+      OnChange = edtDeviceChange
+    end
+    object edtDeviceLabel: TLabel
+      Left = 25
+      Height = 19
+      Top = 10
+      Width = 44
+      Caption = 'Devic&e'
+      FocusControl = edtDevice
+    end
   end
   object MainMenu1: TMainMenu
     Left = 202
@@ -643,20 +665,6 @@ object frmStep: TfrmStep
     Comments = [csCStyle]
     DetectPreprocessor = False
     IdentifierChars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz'
-    KeyWords.Strings = (
-      'C_AC'
-      'C_CCCV'
-      'C_LIFE'
-      'C_LIPO'
-      'C_NICD'
-      'C_NIMH'
-      'C_PB'
-      'D_CC'
-      'D_CP'
-      'D_CR'
-      'LOOP'
-      'WAIT'
-    )
     Constants.Strings = (
       'CAP'
       'CAPI'

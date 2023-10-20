@@ -5,14 +5,14 @@ unit main;
 interface
 
 uses
-  Classes, SysUtils, Forms, Controls, Graphics, Dialogs, StdCtrls, ExtCtrls,
+  Classes, SysUtils, Forms, Controls, Graphics, Dialogs, StdCtrls,
   EditBtn, ComCtrls, Menus, Buttons, ActnList, TAGraph, TASeries,
   TAIntervalSources, TATransformations, TATools, LazSerial, DateUtils,
   TACustomSeries, SynEdit, StepForm, MyIniFile, JLabeledIntegerEdit, math,
-  JLabeledFloatEdit, settings, typinfo, types, lcltype, connectform, aboutform;//, LCLIntf, LCLType;
+  JLabeledFloatEdit, settings, typinfo, types, lcltype, connectform, aboutform, ExtCtrls;
 
 const
-  cVersion = 'EBC Controller v1.12';
+  cVersion = 'EBC Controller v2.13';
 
   cConnectRetries = 10;
 
@@ -50,6 +50,8 @@ const
   cCharge = 'Charge';
   cChargeCV = 'ChargeCV';
   cDischarge = 'Discharge';
+  cDischargeCP = 'DischargeCP';
+  cDischargeCR = 'DischargeCR';
   cCommand = 'Command';
   cStop = 'Stop';
   cConnect = 'Connect';
@@ -59,6 +61,8 @@ const
   cCont = 'Cont';
   cTestVal = 'TestVal';
   cEnableNumCells = 'EnableNumCells';
+  cDefChargeCurrent = 'DefChargeCurrent';
+  cDefDischargeCurrent = 'DefDischargeCurrent';
   cAutoOff = 'AutoOff';
   cVoltInfo = 'CellVoltageInfo';
 
@@ -137,7 +141,7 @@ const
 type
   TCapacity = (caEBC, caLocal);
   TSendMode = (smStart, smAdjust, smCont, smConnect, smDisconnect, smConnStop);
-  TMethod = (mNone, mCharge, mChargeCV, mDischarge);
+  TMethod = (mNone, mCharge, mChargeCV, mDischarge, mDischargeCP, mDischargeCR);
   TTestVal = (tvCurrent, tvPower, tvResistance);
   TConnState = (csNone, csConnecting, csCapture, csConnected); // csCapture = read settings from instrument
 
@@ -185,6 +189,9 @@ type
     VoltInfo: Extended;
     SupportedModels : TIntegerDynArray;
     EnableNumCells : boolean; // for cccv A20/A40
+    DefChargeCurrent : Extended;
+    DefDischargeCurrent : Extended;
+    DefCutoffCurrent : Extended;
   end;
 
 
@@ -267,6 +274,7 @@ type
     MainMenu: TMainMenu;
     memLog: TMemo;
     memStepLog: TMemo;
+    mm_skipStep: TMenuItem;
     mm_AutoCsvFileName: TMenuItem;
     mm_stepEdit: TMenuItem;
     mm_stepLoad: TMenuItem;
@@ -274,6 +282,9 @@ type
     mm_AutoLog: TMenuItem;
     mm_setCsvLogFile: TMenuItem;
     GraphStepslogPanel: TPanel;
+    ChargePannel: TPanel;
+    DischargePanel: TPanel;
+    RightPanel: TPanel;
     Separator2: TMenuItem;
     mm_saveCsv: TMenuItem;
     mm_savePng: TMenuItem;
@@ -294,9 +305,9 @@ type
     sdLogCSV: TSaveDialog;
     sdPNG: TSaveDialog;
     sdCSV: TSaveDialog;
-    Serial: TLazSerial;
     shaCapI: TShape;
     MainStatusBar: TStatusBar;
+    LogSplitter: TSplitter;
     Splitter1: TSplitter;
     stRunMode: TStaticText;
     stStepFile: TStaticText;
@@ -307,6 +318,7 @@ type
     tbxMonitor: TToggleBox;
     tsCharge: TTabSheet;
     tsDischarge: TTabSheet;
+    Serial: TLazSerial;
     procedure mm_AboutClick(Sender: TObject);
     procedure mm_AutoCsvFileNameClick(Sender: TObject);
     procedure mm_AutoLogClick(Sender: TObject);
@@ -326,6 +338,7 @@ type
     procedure btnProgClick(Sender: TObject);
     procedure btnSkipClick(Sender: TObject);
     procedure btnStartClick(Sender: TObject);
+    function doProgramCchecks : boolean;
     procedure btnStopClick(Sender: TObject);
     procedure chkCutCapChange(Sender: TObject);
     procedure chkCutEnergyChange(Sender: TObject);
@@ -347,11 +360,15 @@ type
     procedure rgDischargeClick(Sender: TObject);
     procedure MainStatusBarDrawPanel(StatusBar: TStatusBar; Panel: TStatusPanel;
       const Rect: TRect);
+    procedure Splitter1CanOffset(Sender: TObject; var NewOffset: Integer;
+      var Accept: Boolean);
     procedure tbxMonitorChange(Sender: TObject);
     procedure tmrWaitTimer(Sender: TObject);
     procedure tsChargeEnter(Sender: TObject);
     procedure tsDischargeEnter(Sender: TObject);
     procedure fatalError(aMessage : string);
+
+
   private
     FRecvStatusIndicator: integer;
     FRecvStatusIndicatorInc : integer;
@@ -361,7 +378,9 @@ type
     FLastTime: TDateTime;
     FData: array of TCSVData;
     FAppDir: string;
+  public
     FPackets: array of TPacket;
+  private
     FPacketIndex: Integer;
     FLogFile: Text;
     FRunMode: TRunMode;
@@ -413,6 +432,9 @@ type
     function GetHexPacketFromIni(AIniFile: TMyIniFile; ASection: string; AIdent: string; ADefault: string = ''): string;
     procedure LoadPackets;
     procedure clearChargeDischargeTypes;
+  public
+    function PacketSupportedByCharger(chargerModel, PacketIndex : integer) : boolean;
+  private
     procedure setChargeDischargeTypes(chargerModel : integer);
 
 //    function MakePacket(AType: TSendMode): string;
@@ -427,7 +449,7 @@ type
     function GetPointer(ARadioGroup: TRadioGroup): Integer;
     function MakePacket2(Packet: Integer; SendMode: TSendMode; TestVal, SecondParam: Extended; ATime: Integer; cutoffCurrent: Extended): string;
     function MakeConnPacket(SendMode: TSendMode): string;
-    procedure EBCBreak(Force: Boolean = False); // Force = True terminates even if a program is running.
+    procedure EBCBreak(Force: Boolean = False; closeLogFile: Boolean = true); // Force = True terminates even if a program is running.
     procedure LogStep;
     procedure OffSetting; // Sets labels and button for "off".
     procedure LoadSettings;
@@ -435,7 +457,11 @@ type
     procedure SetSettings;
     function GetStepNum: string;
     function GetModelIndex(AModel: Integer): Integer;
+public
+    function GetModelIndex(AModel: string): Integer;
+private
     procedure stTextClick(Sender: TObject);
+
     function GetEnergy(AEnergy: Extended): string;
     function GetCharge(ACharge: Extended): string;
     procedure FreezeEdits;
@@ -602,9 +628,6 @@ var
   E: TDateTime;
   startFound: boolean;
 begin
-  FRecvStatusIndicator := FRecvStatusIndicator + FRecvStatusIndicatorInc;
-  MainStatusBar.invalidate;
-  Application.ProcessMessages;
   r := '';
   N := 0;
   E := Now;
@@ -639,6 +662,9 @@ begin
   begin
     if InterpretPackage(r, E) then  // false if checksum is invalid
     begin
+      FRecvStatusIndicator := FRecvStatusIndicator + FRecvStatusIndicatorInc;
+      MainStatusBar.invalidate;
+      Application.ProcessMessages;
       if FConnState = csConnecting then
       begin
         FModel := GetModelIndex(Ord(r[17]));
@@ -653,6 +679,7 @@ begin
           FIFactor := FModels[FModel].IFactor;
           setChargeDischargeTypes(FModel);
           edtChargeV.Enabled:=false;
+          frmStep.setDevice(FModels[FModel].Name);
         end;
       end;
     end
@@ -660,9 +687,6 @@ begin
       doLog(Format('<%s invalid checksum',[r]));
   end;
   FLastTime := E;
-  FRecvStatusIndicator := FRecvStatusIndicator + FRecvStatusIndicatorInc;
-  MainStatusBar.invalidate;
-  Application.ProcessMessages;
 end;
 
 function TfrmMain.InterpretPackage(APacket: string; ANow: TDateTime) : boolean;
@@ -803,7 +827,7 @@ begin
     // AutoOff check
     if (not (FRunMode in [rmNone, rmMonitor, rmWait, rmLoop])) and
        ((APacket[2] = FPackets[FPacketIndex].AutoOff) or ((FSampleCounter > 3) and (FLastI < 0.0001))) then
-      EBCBreak;
+         if FInProgram then EBCBreak(false,false) else EBCBreak;
 
     // Cutoff checks
     if (FRunMode = rmCharging) and (FSampleCounter > 3) then
@@ -814,18 +838,18 @@ begin
         begin
           DoLog('Time: ' + IntToStr(SecondsBetween(FChecks.ThresholdTime, Now)));
           if SecondsBetween(FChecks.ThresholdTime, Now) div 60 >= FChecks.cDwellTime then
-            EBCBreak;
+            if FInProgram then EBCBreak(false,false) else EBCBreak;
         end else
         begin
           FChecks.ThresholdTime := Now;
           FChecks.TimerRunning := True;
           DoLog('Timer started.');
           if FChecks.cDwellTime = 0 then
-            EBCBreak;
+            if FInProgram then EBCBreak(false,false) else EBCBreak;
         end;
       end;
       if FCurrentCapacity[caEBC] > FChecks.cCapacity then
-        EBCBreak;
+        if FInProgram then EBCBreak(false,false) else EBCBreak;
     end;
   end else
   begin
@@ -995,30 +1019,35 @@ begin
   rgDischarge.Items.Clear;
 end;
 
+
+function TfrmMain.PacketSupportedByCharger(chargerModel, PacketIndex : integer) : boolean;
+var supportedModel : Integer;
+begin
+  with FPackets[PacketIndex] do
+  begin
+    result := (Length(SupportedModels) = 0);   // all models
+    if not result then
+      for supportedModel in SupportedModels do
+        if supportedModel = (chargerModel+1) then result:=true;
+  end;
+end;
+
 // set the charge/discharge types allowed for the given model in the
 // rgCharge/rgDisCharge radio groups
 procedure TfrmMain.setChargeDischargeTypes(chargerModel : integer);
-var
-  i,supportedModel : Integer;
-  chargerMatches : Boolean;
-
+var i : Integer;
 begin
   clearChargeDischargeTypes;
   for I := Low(FPackets) to High(FPackets) - 1 do
-    with FPackets[i] do
-    begin
-      chargerMatches := (Length(SupportedModels) = 0);   // all models
-      if not chargerMatches then
-        for supportedModel in SupportedModels do
-          if supportedModel = (chargerModel+1) then chargerMatches:=true;
-
-      if chargerMatches then
+    if PacketSupportedByCharger(chargerModel,i) then
+      with FPackets[i] do
         case Method of
           mChargeCV,
-          mCharge     : rgCharge.Items.AddObject(Name, TObject(Pointer(i)));
-          mDischarge  : rgDisCharge.Items.AddObject(Name, TObject(Pointer(i)));
+          mCharge      : rgCharge.Items.AddObject(Name, TObject(Pointer(i)));
+          mDischarge,
+          mDischargeCR,
+          mDischargeCP : rgDisCharge.Items.AddObject(Name, TObject(Pointer(i)));
         end;
-    end;
 end;
 
 procedure TfrmMain.LoadPackets;
@@ -1026,7 +1055,7 @@ var
   ini: TMyIniFile;
   I, P: Integer;
   N: Integer;
-  s: string;
+  s,s2,fixedCmd: string;
   Sec: string;
 
   function findPacketIndex(command:string):integer;
@@ -1059,6 +1088,12 @@ begin
     s := ini.ReadString(Sec, cCommand, '');
     if s > '' then
     begin
+      s2 := AnsiLowerCase(s);
+      for fixedCmd in c_FixedCmds do
+        if fixedCmd = s2 then s := '';  // ignore fixed commands in old config files
+    end;
+    if s > '' then
+    begin
       N := 0;
       SetLength(FPackets, Length(FPackets) + 1);
       P := Length(FPackets) - 1;
@@ -1071,6 +1106,9 @@ begin
         Name := ini.ReadString(Sec, cName, 'Noname');
         AutoOff := GetHexPacketFromIni(ini, Sec, cAutoOff, 'FF');
         VoltInfo := ini.ReadFloat(Sec, cVoltInfo, 0);
+        DefChargeCurrent := ini.ReadFloat(Sec, cDefChargeCurrent, 0);
+        DefDischargeCurrent := ini.ReadFloat(Sec, cDefDischargeCurrent, 0);
+        DefCutoffCurrent := ini.ReadFloat(Sec, cCutA, 0);
         EnableNumCells := ini.ReadBool(sec,cEnableNumCells,false);
         try
           ini.ReadIntegers(Sec, cModels, SupportedModels);
@@ -1091,21 +1129,17 @@ begin
         end;
         s := ini.ReadString(Sec, cMethod, '');
         if s = cCharge then
-        begin
-          Method := mCharge;
-          //rgCharge.Items.AddObject(Name, TObject(Pointer(P)));
-        end else if s = cDischarge then
-        begin
-          Method := mDischarge;
-          //rgDisCharge.Items.AddObject(Name, TObject(Pointer(P)));
-        end else if s = cChargeCV then
-        begin
-          Method := mChargeCV;
-          //rgCharge.Items.AddObject(Name, TObject(Pointer(P)));
-        end else
-        begin
+          Method := mCharge
+        else if s = cDischarge then
+          Method := mDischarge
+        else if s = cDischargeCP then
+          Method := mDischargeCP
+        else if s = cDischargeCR then
+          Method := mDischargeCR
+        else if s = cChargeCV then
+          Method := mChargeCV
+        else
           Method := mNone;
-        end;
       end;
     end else
     begin
@@ -1123,12 +1157,14 @@ begin
   SetLength(FModels, 0);
   N := 0;
   I := 0;
+  frmStep.edtDevice.Items.Clear;
   repeat
     Sec := IntToStr(I);
     s := ini.ReadString(cModels, cModelName + Sec, '');
     if s > '' then
     begin
       N := 0;
+      frmStep.edtDevice.Items.Add(s);
       SetLength(FModels, Length(FModels) + 1);
       with FModels[Length(FModels) - 1] do
       begin
@@ -1203,7 +1239,9 @@ begin
                    if numCells < 1 then numCells := 1;
                    Result := MakePacket2(Packet, AType, edtTestVal.Value, edtChargeV.Value * numCells, edtCutTime.Value, round2(edtCutA.Value,2));
                  end;
-    mDischarge : Result := MakePacket2(Packet, AType, edtTestVal.Value, edtCutV.Value, edtCutTime.Value, 0);
+    mDischarge,
+    mDischargeCR,
+    mDischargeCP: Result := MakePacket2(Packet, AType, edtTestVal.Value, edtCutV.Value, edtCutTime.Value, 0);
   end;
 end;
 
@@ -1236,7 +1274,7 @@ begin
       // TODO: make steps work, number of cells
       p1 := EncodeCurrent(round2(TestVal,2));      // current
       p2 := EncodeVoltage(round2(SecondParam,2));  // voltage without round we will get 4.219999999 when 4.22 is requested
-      P3 := EncodeCurrent(cutoffCurrent);  // FIXME
+      P3 := EncodeCurrent(cutoffCurrent);
       doLog(format('EBC-A20: p1:%g p2:%g p3: %g',[round2(TestVal,2),round2(edtChargeV.Value,2),round2(edtCutA.Value,2)]));
     end else
     begin
@@ -1309,16 +1347,18 @@ begin
   end;
 end;
 
-procedure TfrmMain.EBCBreak(Force: Boolean);
+procedure TfrmMain.EBCBreak(Force: Boolean; closeLogFile: Boolean = true);
 begin
   btnSkip.Enabled := False;
+  mm_skipStep.Enabled := False;
   if frmSettings.cgSettings.Checked[cForceMon] then
     tbxMonitor.Checked := True;
   FChecks.TimerRunning := False;
   SendData(MakeConnPacket(smConnStop));
   RunModeOffOrMonitor;
   if mm_AutoLog.Checked then
-    StopLogging;
+    if closeLogFile then
+      StopLogging;
 
   //mm_AutoLog.Enabled := True;
   if FInProgram then
@@ -1328,13 +1368,11 @@ begin
     begin
       FInProgram := False;
     end else if FWaitCounter = 0 then
-    begin
       LoadStep;
-    end;
   end else
   begin
-    // ad: was missing
     OffSetting;
+    StopLogging;
   end;
 end;
 
@@ -1357,6 +1395,16 @@ begin
     Result := High(FModels);
   end;
 end;
+
+
+function TfrmMain.GetModelIndex(AModel: String): Integer;
+var I: Integer;
+begin
+  Result := -1;
+  for I := Low(FModels) to High(FModels) - 1 do
+    if AModel = FModels[I].Name then exit(i);
+end;
+
 
 procedure TfrmMain.stTextClick(Sender: TObject);
 begin
@@ -1533,9 +1581,7 @@ var
   col: array [2..High(cCol)] of string;
 begin
   for I := Low(col) to High(col) do
-  begin
     col[I] := '';
-  end;
 
   col[2] := FSteps[FCurrentStep].Command;
   col[5] := MyTimeToStr(Now - FStepTime);
@@ -1559,16 +1605,14 @@ begin
     begin
       col[2] := col[2] + ' ' + IntToStr(FSteps[FCurrentStep].Loop);
     end;
-    rmEnd:
+{    rmEnd:
     begin
 
-    end;
+    end;}
   end;
   s := AlignR(GetStepNum, cCol[1]);
   for I := Low(col) to High(col) do
-  begin
     s := s + edtDelim.Text + AlignR(col[I], cCol[I]);
-  end;
 
   memStepLog.Lines.Add(s);
 end;
@@ -1592,6 +1636,7 @@ begin
   lblStep.Caption := '';
   lblStepNum.Caption := '';
   btnSkip.Enabled := False;
+  mm_skipStep.Enabled := False;
   UnlockEdits;
 end;
 
@@ -1711,7 +1756,7 @@ begin
     if Length(frmSettings.edtProgFile.Text) > 0 then
     begin
       frmStep.memStep.Lines.LoadFromFile(frmSettings.edtProgFile.Text);
-      frmStep.Compile;
+      frmStep.Compile(fModel,false);
     end;
   if not frmSettings.cgSettings.Checked[cRememberSaveDir] then
   begin
@@ -1756,7 +1801,7 @@ end;
 
 procedure TfrmMain.FixLabels(APacket: Integer);
 begin
-  if APacket > -1 then
+  if (APacket > -1) and (APacket < c_fixedBase) then
   begin
     case FPackets[APacket].TestVal of
       tvCurrent:
@@ -1812,7 +1857,6 @@ var
   fileName,fileDir : string;
   err : integer;
 begin
-  // TODO: emlpement aut logging
   result := false;
   if mm_AutoLog.Checked then
   begin
@@ -1847,7 +1891,7 @@ begin
     err := ioresult;
     if (err <> 0) then
     begin
-       Application.MessageBox(pchar(Format('unable to create logfile %s (%d)',[fileName,err])),cError,MB_ICONSTOP);
+       MessageDlg(cError,Format('unable to create logfile %s (%d)',[fileName,err]), mtError,[mbAbort],0);
        exit;
     end;
     setStatusLine(cst_LogFileName,fileName);
@@ -1896,13 +1940,13 @@ var
   DoSend: Boolean;
   DoUpdate: Boolean;
 begin
-  {$push}
-  {$boolEval off}
-  while (FProgramStep < Length(FSteps)) and (Pos('//', FSteps[FProgramStep].Command) > 0) do
-  {$pop}
-  begin
-    Inc(FProgramStep);
-  end;
+//  {$push}
+//  {$boolEval off}
+//  while (FProgramStep < Length(FSteps)) and (Pos('//', FSteps[FProgramStep].Command) > 0) do
+//  {$pop}
+//  begin
+//    Inc(FProgramStep);
+//  end;
   if FProgramStep < Length(FSteps) then
   begin
     DoSend := True;
@@ -1917,11 +1961,11 @@ begin
     FStepTime := Now;
     with FSteps[FProgramStep] do
     begin
-      I := FindPacket(Command);
+      I := FSteps[FProgramStep].PacketIndex; //FindPacket(Command);
       lblStepNum.Caption := IntToStr(FProgramStep + 1);
       lblStep.Caption := ' ' + Command + ' ';
       SetRunMode(Mode);
-      if I > -1 then
+      //if I > -1 then
       begin
         FixLabels(I);
         FPacketIndex := I;
@@ -2034,7 +2078,7 @@ begin
           edtCutM.Value := CutAmpTime;
           if Mode = rmCharging then
           begin
-            if Pos(cCmdCCCV, Command) > 0 then
+            if Pos(cCmdCCCV, Command) > 0 then   // AD: FIXME
             begin
               edtChargeV.Value := CV;
             end else
@@ -2042,9 +2086,7 @@ begin
               edtCells.Value := Trunc(P2);
             end;
           end else if Mode in [rmDischarging, rmDischargingCR] then
-          begin
             edtCutV.Value := CutVolt;
-          end;
         end;
         if DoSend then
         begin
@@ -2054,17 +2096,18 @@ begin
           FStartU := FLastU;
           SendData(MakePacket2(I, smStart, TestVal, P2, CutTime, CutAmp));
         end;
-      end else
+      end{ else
       begin
         memStepLog.Lines.Add('Syntax error: ' + Command);
-      end;
+      end};
     end;
     Inc(FProgramStep);
     btnSkip.Enabled := True;
+    mm_skipStep.Enabled := True;
   end else
   begin
     FInProgram := False;
-    EBCBreak;
+    EBCBreak (true,true);
     OffSetting;
   end;
 end;
@@ -2108,6 +2151,7 @@ begin
       end;
     end else
     begin
+      frmStep.edtDevice.Text := '';
       ReconnectTimer.Enabled:= false;
       SendData(MakeConnPacket(smDisconnect));
       setStatusLine(cst_ConnectionStatus,cNotConnected);
@@ -2195,9 +2239,15 @@ begin
   SaveSettings;
 end;
 
+
 procedure TfrmMain.mm_stepLoadClick(Sender: TObject);
 begin
   frmStep.mniOpenClick(Sender);
+  if frmStep.Compiled then
+  begin
+    pcProgram.ActivePage := tsProgram;  // set active tab to program after loading a valid file
+    btnStart.Enabled:=true;
+  end;
 
   {if frmStep.odOpen.Execute then
   begin
@@ -2234,14 +2284,20 @@ end;
 
 procedure TfrmMain.btnProgClick(Sender: TObject);
 begin
-  frmStep.ShowModal;
+  if frmStep.ShowModal = mrOK then
+    pcProgram.ActivePage := tsProgram;
   stStepFile.Caption := ExtractFileName(frmStep.odOpen.FileName);
-  btnStart.Enabled := Length(frmStep.memStep.Text) > 2;
+  if not FInProgram then
+  begin
+    btnStart.Enabled := Length(frmStep.memStep.Text) > 2;
+    pcProgram.ActivePage := tsProgram;
+  end;
 end;
 
 procedure TfrmMain.btnSkipClick(Sender: TObject);
 begin
   btnSkip.Enabled := False;
+  mm_skipStep.Enabled := False;
   if FInProgram then
   begin
     if FRunMode = rmWait then
@@ -2249,9 +2305,23 @@ begin
       FWaitCounter := 1;
 //      TimerOff;
     end else
-    begin
-      EBCBreak;
-    end;
+      EBCBreak (false,false);
+  end;
+end;
+
+function TfrmMain.doProgramCchecks : boolean;
+var
+  i:integer;
+begin
+  result := true;
+  for I := low(FSteps) to high(FSteps) do
+  begin
+    if FSteps[i].Mode = rmCharging then
+      if FSteps[i].CutAmp >= FSteps[i].TestVal then
+      begin
+        Application.MessageBox(pchar(format('Charge current (%fA) is lower than cutoff current (%fA)',[FSteps[i].TestVal,FSteps[i].CutAmp])),cFatal,MB_ICONSTOP);
+        exit (false);
+      end;
   end;
 end;
 
@@ -2289,6 +2359,10 @@ begin
             Application.MessageBox(pchar(Format('Charge voltage (%fV) exceeds the maximum supported by %s (%fV)',[edtChargeV.Value,FModels[FModel].Name,FModels[FModel].MaxChargeVoltage])),cError,MB_ICONSTOP);
             exit;
           end;
+      end else
+      begin
+        Application.MessageBox('no charging profile selected',cError,MB_ICONSTOP);
+        exit;
       end;
       if not StartLogging then exit;
       tsDisCharge.Enabled := False;
@@ -2314,14 +2388,16 @@ begin
     end;
   end else if pcProgram.ActivePage = tsProgram then
   begin
+    if not doProgramCchecks then exit;
+    if frmStep.Compile(fModel,false) <> mrOk then exit;
     if not StartLogging then exit;
-    frmStep.Compile;
     frmStep.memStep.Enabled := False;
     btnProg.Caption := cView;
     btnStart.Enabled := False;
     btnAdjust.Enabled := True;
     btnCont.Enabled := False;
     btnStop.Enabled := True;
+    btnStart.Enabled := False;
     FProgramStep := 0;
     FInProgram := True;
     memStepLog.Lines.Clear;
@@ -2360,6 +2436,7 @@ begin
     begin
       LoadStep;
       btnSkip.Enabled := True;
+      mm_skipStep.Enabled := True;
     end else
     begin
       s := NewMakePacket(FPacketIndex, smStart);
@@ -2476,6 +2553,16 @@ begin
   FDelta[0].Time := Now;
   FDelta[1].Time := Now;
 
+  // for Windows as async do not exist for Windows
+  Serial:= TLazSerial.Create(Self);
+  Serial.BaudRate:=br__9600;
+  Serial.DataBits := db8bits;
+  Serial.FlowControl:=fcNone;
+  Serial.Parity := pOdd;
+  Serial.RcvLineCRLF:=false;
+  Serial.StopBits:=sbOne;
+
+
   SetLength(stText, cstMax + 1);
   for I := Low(stText) to High(stText) do
   begin
@@ -2556,6 +2643,11 @@ begin
   clearChargeDischargeTypes;
   FRecvStatusIndicatorInc := 1;
   FRecvStatusIndicatorInc := -1;
+  frmStep.setDevice('');
+  {$ifdef windows}
+  MemStepLog.Font.Name := 'Fixedsys';
+  MemLog.Font.Name := 'Fixedsys';
+  {$endif}
 end;
 
 procedure TfrmMain.memLogChange(Sender: TObject);
@@ -2594,12 +2686,29 @@ begin
   edtCells.Value := FDefault.Cells;
   edtTestVal.Value := FDefault.ChargeI;
   I := GetPointer(rgCharge);
-  if I >-1 then if FPackets[I].Method = mChargeCV then
+  if I >-1 then
   begin
-    btnStart.Enabled := True;
-    edtChargeV.Enabled := True;
-    edtCells.Enabled := FPackets[I].EnableNumCells;
-    edtChargeV.Value := FPackets[I].VoltInfo;
+    if FPackets[I].Method = mChargeCV then
+    begin
+      btnStart.Enabled := True;
+      edtChargeV.Enabled := True;
+      edtCells.Enabled := FPackets[I].EnableNumCells;
+      edtChargeV.Value := FPackets[I].VoltInfo;
+      if FModel >= 0 then
+        if FModels[FModel].MaxChargeVoltage > 0 then
+           if edtChargeV.Value * 2 > FModels[FModel].MaxChargeVoltage then edtCells.Enabled:=false;
+    end;
+    // set default charge/discharge current if specified in ini file for packet
+    if (FPackets[I].Method = mChargeCV) or (FPackets[I].Method = mCharge) then
+    begin
+      if FPackets[I].DefChargeCurrent > 0.001 then
+        edtTestVal.Value := FPackets[I].DefChargeCurrent;
+      if FPackets[I].DefCutoffCurrent > 0.001 then
+        edtCutA.Value := FPackets[I].DefCutoffCurrent;
+    end;
+    if FPackets[I].Method = mDischarge then
+      if FPackets[I].DefDischargeCurrent > 0.001 then
+        edtTestVal.Value := FPackets[I].DefDischargeCurrent;
   end else
   begin
     edtChargeV.Enabled:=false;
@@ -2660,6 +2769,11 @@ begin
       end;
   end;
 end;
+
+procedure TfrmMain.Splitter1CanOffset(Sender: TObject; var NewOffset: Integer;
+  var Accept: Boolean);
+begin
+  end;
 
 procedure TfrmMain.tbxMonitorChange(Sender: TObject);
 begin

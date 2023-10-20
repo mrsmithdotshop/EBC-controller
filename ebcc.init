@@ -98,6 +98,9 @@ Type=ChargeCV
 CellVoltageInfo=4.2
 Models=3,4
 EnableNumCells=1
+DefChargeCurrent=0.99
+DefDischargeCurrent=0.5
+CutOffA=0.3
 
 [16]
 Command=c_LiFe
@@ -116,7 +119,8 @@ Name=PbAc - Lead Acid
 Start=fa 21 00 00 00 00 00 00 00 f8
 Cont=fa 28 00 00 00 00 00 00 00 f8
 AutoOff=02
-Type=ChargeCVCellVoltageInfo=2.4
+Type=ChargeCV
+CellVoltageInfo=2.4
 Models=3,4
 CellVoltageInfo=2,26
 EnableNumCells=1
@@ -168,9 +172,6 @@ UFactor=1
 Connect=fa 05 00 00 00 00 00 00 05 F8
 Disconnect=fa 06 00 00 00 00 00 00 06 F8
 Stop=fa 02 00 00 00 00 00 00 02 f8
-MaxChargeVoltage=10
-MaxChargeCurrent=3
-MaxDischargeCurrent=5
 
 [EBC-A10H]
 Ident=06
@@ -179,9 +180,6 @@ UFactor=1
 Connect=fa 05 00 00 00 00 00 00 05 F8
 Disconnect=fa 06 00 00 00 00 00 00 06 F8
 Stop=fa 02 00 00 00 00 00 00 02 f8
-MxChargeCurrent=3
-MaxChargeVoltage=22
-MaxDischargeCurrent=10
 
 [EBC-A20]
 Ident=09
@@ -195,7 +193,6 @@ CommandFormat=1
 MaxChargeVoltage=30
 MaxChargeCurrent=5
 MaxDischargeCurrent=20
-
 
 [EBC-A40]
 Ident=10

@@ -1,7 +1,7 @@
 object frmSettings: TfrmSettings
-  Left = 483
+  Left = 557
   Height = 492
-  Top = 167
+  Top = 225
   Width = 630
   BorderIcons = [biSystemMenu, biMinimize]
   BorderStyle = bsDialog
@@ -11,7 +11,7 @@ object frmSettings: TfrmSettings
   OnCreate = FormCreate
   OnShow = FormShow
   Position = poDefault
-  LCLVersion = '3.0.0.1'
+  LCLVersion = '3.0.0.2'
   object rgStart: TRadioGroup
     Left = 8
     Height = 111
@@ -28,7 +28,7 @@ object frmSettings: TfrmSettings
     ChildSizing.Layout = cclLeftToRightThenTopToBottom
     ChildSizing.ControlsPerLine = 1
     ClientHeight = 91
-    ClientWidth = 606
+    ClientWidth = 604
     Items.Strings = (
       'Load last settings'
       'Use default settings'
@@ -46,8 +46,8 @@ object frmSettings: TfrmSettings
     Caption = '&Ok'
     Default = True
     ModalResult = 1
-    OnClick = OkButtonClick
     TabOrder = 4
+    OnClick = OkButtonClick
   end
   object cgSettings: TCheckGroup
     Left = 8
@@ -66,7 +66,7 @@ object frmSettings: TfrmSettings
     ChildSizing.Layout = cclLeftToRightThenTopToBottom
     ChildSizing.ControlsPerLine = 1
     ClientHeight = 220
-    ClientWidth = 606
+    ClientWidth = 604
     Items.Strings = (
       '&Autoload program file'
       '&Remember save directory'
@@ -83,7 +83,7 @@ object frmSettings: TfrmSettings
       0700000002020202020202
     }
     object edtProgFile: TFileNameEdit
-      Left = 180
+      Left = 178
       Height = 28
       Top = 9
       Width = 420
@@ -106,17 +106,17 @@ object frmSettings: TfrmSettings
     Anchors = [akTop, akLeft, akRight]
     Caption = 'Parameters'
     ClientHeight = 70
-    ClientWidth = 606
+    ClientWidth = 604
     TabOrder = 1
     object edtIntTime: TJLabeledIntegerEdit
       Left = 13
-      Height = 36
+      Height = 23
       Top = 30
       Width = 114
       DisplayFormat = '0'
       Value = 60
       NegativeColor = clDefault
-      EditLabel.Height = 19
+      EditLabel.Height = 15
       EditLabel.Width = 114
       EditLabel.Caption = '&dVdA Int. time (s)'
       EditLabel.ParentColor = False
