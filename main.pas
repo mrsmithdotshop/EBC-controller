@@ -130,7 +130,9 @@ const
   cst_ConnectionState = 0;
   cst_ConnectionStatus = 1;
   cst_ConnectedModel = 2;
-  cst_LogFileName = 3;
+  cst_RunMode = 3;
+  cst_LogFileName = 4;
+
 
 
   // Log table headers
@@ -248,7 +250,6 @@ type
     gbStatus: TGroupBox;
     Label1: TLabel;
     Label2: TLabel;
-    Label3: TLabel;
     lblCapI: TLabel;
     lblProgTime: TLabel;
     Label10: TLabel;
@@ -309,7 +310,6 @@ type
     MainStatusBar: TStatusBar;
     LogSplitter: TSplitter;
     Splitter1: TSplitter;
-    stRunMode: TStaticText;
     stStepFile: TStaticText;
     ReconnectTimer: TTimer;
     ConnectionWatchdogTimer: TTimer;
@@ -1512,38 +1512,14 @@ procedure TfrmMain.SetRunMode(ARunMode: TRunMode);
 begin
   FRunMode := ARunMode;
   case FRunMode of
-    rmNone:
-    begin
-      stRunMode.Caption := 'N';
-    end;
-    rmMonitor:
-    begin
-      stRunMode.Caption := 'M';
-    end;
-    rmCharging:
-    begin
-      stRunMode.Caption := 'C';
-    end;
-    rmDischarging:
-    begin
-      stRunMode.Caption := 'D';
-    end;
-    rmDischargingCR:
-    begin
-      stRunMode.Caption := cR;
-    end;
-    rmWait:
-    begin
-      stRunMode.Caption := 'W';
-    end;
-    rmLoop:
-    begin
-      stRunMode.Caption := 'L';
-    end;
-    rmEnd:
-    begin
-      stRunMode.Caption := 'E';
-    end;
+    rmNone          : setStatusLine(cst_RunMode,'-');
+    rmMonitor       : setStatusLine(cst_RunMode,'M');
+    rmCharging      : setStatusLine(cst_RunMode,'C');
+    rmDischarging   : setStatusLine(cst_RunMode,'D');
+    rmDischargingCR : setStatusLine(cst_RunMode,cR);
+    rmWait          : setStatusLine(cst_RunMode,'W');
+    rmLoop          : setStatusLine(cst_RunMode,'L');
+    rmEnd           : setStatusLine(cst_RunMode,'E');
   end;
 end;
 
@@ -2620,7 +2596,6 @@ begin
 
   setStatusLine(cst_ConnectionStatus,cNotConnected);
   setStatusLine(cst_ConnectedModel,'');
-  stRunMode.BringToFront;
   N := 0;
   for I := 0 to rgCharge.Items.Count -1 do
   begin

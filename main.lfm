@@ -28,7 +28,10 @@ object frmMain: TfrmMain
         Width = 100
       end    
       item
-        Width = 50
+        Width = 20
+      end    
+      item
+        Width = 200
       end>
     SimplePanel = False
     OnDrawPanel = MainStatusBarDrawPanel
@@ -73,12 +76,12 @@ object frmMain: TfrmMain
       Height = 382
       Top = 306
       Width = 290
-      ActivePage = tsCharge
+      ActivePage = tsProgram
       Anchors = [akTop, akRight, akBottom]
       BorderSpacing.Right = 2
       Constraints.MaxWidth = 290
-      TabIndex = 0
-      TabOrder = 3
+      TabIndex = 2
+      TabOrder = 2
       OnChange = pcProgramChange
       object tsCharge: TTabSheet
         Caption = 'Charge'
@@ -330,7 +333,7 @@ object frmMain: TfrmMain
         object lblProgTime: TLabel
           Left = 132
           Height = 19
-          Top = 50
+          Top = 61
           Width = 62
           Caption = '00:00:00'
           ParentColor = False
@@ -399,14 +402,6 @@ object frmMain: TfrmMain
           Caption = '(no file)'
           TabOrder = 0
         end
-        object Label3: TLabel
-          Left = 9
-          Height = 19
-          Top = 104
-          Width = 24
-          Caption = 'File'
-          ParentColor = False
-        end
       end
       object tsConsole: TTabSheet
         Caption = 'Console'
@@ -434,18 +429,6 @@ object frmMain: TfrmMain
           OnChange = memLogChange
         end
       end
-    end
-    object stRunMode: TStaticText
-      Left = 152
-      Height = 20
-      Top = 392
-      Width = 15
-      Caption = 'O'
-      Color = clWindow
-      Font.Color = clMoneyGreen
-      ParentFont = False
-      ParentColor = False
-      TabOrder = 2
     end
     object Splitter1: TSplitter
       Cursor = crVSplit
