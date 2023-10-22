@@ -73,11 +73,11 @@ object frmMain: TfrmMain
       Height = 382
       Top = 306
       Width = 290
-      ActivePage = tsConsole
+      ActivePage = tsCharge
       Anchors = [akTop, akRight, akBottom]
       BorderSpacing.Right = 2
       Constraints.MaxWidth = 290
-      TabIndex = 3
+      TabIndex = 0
       TabOrder = 3
       OnChange = pcProgramChange
       object tsCharge: TTabSheet
@@ -235,7 +235,7 @@ object frmMain: TfrmMain
           ChildSizing.ShrinkVertical = crsScaleChilds
           ChildSizing.Layout = cclLeftToRightThenTopToBottom
           ChildSizing.ControlsPerLine = 1
-          ClientHeight = 137
+          ClientHeight = 155
           ClientWidth = 278
           ItemIndex = 0
           Items.Strings = (
@@ -418,7 +418,7 @@ object frmMain: TfrmMain
           AnchorSideRight.Control = tsConsole
           AnchorSideRight.Side = asrBottom
           Left = 0
-          Height = 161
+          Height = 352
           Top = 0
           Width = 280
           Anchors = [akTop, akLeft, akRight, akBottom]
@@ -797,7 +797,7 @@ object frmMain: TfrmMain
   end
   object ChartToolset1: TChartToolset
     Left = 312
-    Top = 80
+    Top = 32
     object ChartToolset1ZoomMouseWheelTool1: TZoomMouseWheelTool
     end
   end
@@ -822,8 +822,8 @@ object frmMain: TfrmMain
   object tmrWait: TTimer
     Enabled = False
     OnTimer = tmrWaitTimer
-    Left = 560
-    Top = 144
+    Left = 686
+    Top = 344
   end
   object alList: TActionList
     Left = 168
@@ -951,5 +951,12 @@ object frmMain: TfrmMain
     OnTimer = ReconnectTimerTimer
     Left = 686
     Top = 399
+  end
+  object ConnectionWatchdogTimer: TTimer
+    Enabled = False
+    Interval = 20000
+    OnTimer = ConnectionWatchdogTimerTimer
+    Left = 686
+    Top = 464
   end
 end

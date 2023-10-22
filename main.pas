@@ -12,7 +12,7 @@ uses
   JLabeledFloatEdit, settings, typinfo, types, lcltype, connectform, aboutform, ExtCtrls;
 
 const
-  cVersion = 'EBC Controller v2.13';
+  cVersion = 'EBC Controller v2.14';
 
   cConnectRetries = 10;
 
@@ -312,6 +312,7 @@ type
     stRunMode: TStaticText;
     stStepFile: TStaticText;
     ReconnectTimer: TTimer;
+    ConnectionWatchdogTimer: TTimer;
     tsConsole: TTabSheet;
     tmrWait: TTimer;
     tsProgram: TTabSheet;
@@ -319,6 +320,7 @@ type
     tsCharge: TTabSheet;
     tsDischarge: TTabSheet;
     Serial: TLazSerial;
+    procedure ConnectionWatchdogTimerTimer(Sender: TObject);
     procedure mm_AboutClick(Sender: TObject);
     procedure mm_AutoCsvFileNameClick(Sender: TObject);
     procedure mm_AutoLogClick(Sender: TObject);
@@ -619,7 +621,6 @@ begin
   Application.Terminate;
 end;
 
-// TODO: ignote data until start char an receive until end char
 procedure TfrmMain.SerialRec(Sender: TObject);
 var
   s: string;
@@ -671,9 +672,10 @@ begin
         if FModel > -1 then
         begin
           ReconnectTimer.Enabled:=false;
+          ConnectionWatchdogTimer.Enabled:=true;
           setStatusLine(cst_ConnectionStatus,cConnected);
           setStatusLine(cst_ConnectedModel,FModels[FModel].Name);
-
+          tbxMonitor.Enabled := True;
           FConnState := csConnected;
           FUFactor := FModels[FModel].UFactor;
           FIFactor := FModels[FModel].IFactor;
@@ -681,6 +683,10 @@ begin
           edtChargeV.Enabled:=false;
           frmStep.setDevice(FModels[FModel].Name);
         end;
+      end else
+      begin
+        ConnectionWatchdogTimer.Enabled:=false;
+        ConnectionWatchdogTimer.Enabled:=true;  // does this reset the timer ?
       end;
     end
     else
@@ -750,9 +756,7 @@ begin
     begin
       tmp := FLastU / FLastI;
       if ValOk(tmp) then
-      begin
         stText[cstResistance].Caption := MyFloatStr(tmp) + cR;
-      end;
     end;
 
 
@@ -1624,7 +1628,10 @@ begin
   btnStop.Enabled := False;
   btnStart.Enabled := True;
   btnAdjust.Enabled := False;
-  tbxMonitor.Enabled := True;
+  if fConnState = csConnected then
+    tbxMonitor.Enabled := True
+  else
+    tbxMonitor.Enabled := False;
   FInProgram := False;
   frmStep.memStep.Enabled := True;
   btnProg.Caption := cEdit;
@@ -2153,6 +2160,7 @@ begin
     begin
       frmStep.edtDevice.Text := '';
       ReconnectTimer.Enabled:= false;
+      ConnectionWatchdogTimer.Enabled := false;
       SendData(MakeConnPacket(smDisconnect));
       setStatusLine(cst_ConnectionStatus,cNotConnected);
       setStatusLine(cst_ConnectedModel,'');
@@ -2163,11 +2171,15 @@ begin
       clearChargeDischargeTypes;
       mm_Connect.Enabled:=true;
       mm_Disconnect.Enabled:=false;
+      MainStatusBar.invalidate;
+      ConnectionWatchdogTimer.Enabled := false;
     end;
   except
     FConnState := csNone;
     setStatusLine(cst_ConnectionStatus,cNotConnected);
     setStatusLine(cst_ConnectedModel,'');
+    ReconnectTimer.Enabled:= false;
+    ConnectionWatchdogTimer.Enabled := false;
     Application.MessageBox(pchar('Could not connect to ' + frmconnect.edtDevice.Text),'Error',MB_ICONSTOP);
   end;
 end;
@@ -2186,6 +2198,13 @@ begin
   finally
     t.free;
   end;
+end;
+
+procedure TfrmMain.ConnectionWatchdogTimerTimer(Sender: TObject);
+begin
+  ConnectionWatchdogTimer.Enabled := false;
+  if fConnState = csConnected then mm_ConnectClick(Sender);
+  MessageDlg('Connection Lost','Timout waiting for a packed from charger device', mtError,[mbOk],0);
 end;
 
 procedure TfrmMain.mm_AutoCsvFileNameClick(Sender: TObject);
@@ -2754,12 +2773,12 @@ begin
       begin
         Brush.Color := cldefault;
         rectangle(2,5,MainStatusBar.Panels[cst_ConnectionState].width-2,height-6);
-        if (FRecvStatusIndicator > MainStatusBar.Panels[cst_ConnectionState].width-10) then
+        if (FRecvStatusIndicator >= MainStatusBar.Panels[cst_ConnectionState].width-10) then
         begin
           FRecvStatusIndicator := MainStatusBar.Panels[cst_ConnectionState].width-10;
           FRecvStatusIndicatorInc := -1;
         end;
-        if (FRecvStatusIndicator < 0) then
+        if (FRecvStatusIndicator < 1) then
         begin
            FRecvStatusIndicator := 0;
            FRecvStatusIndicatorInc := 1;
@@ -2780,15 +2799,11 @@ begin
   if FRunMode = rmNone then
   begin
     if tbxMonitor.Checked then
-    begin
       SetRunMode(rmMonitor);
-    end;
   end else if FRunMode = rmMonitor then
   begin
     if not tbxMonitor.Checked then
-    begin
       SetRunMode(rmNone);
-    end;
   end;
 end;
 
@@ -2799,9 +2814,7 @@ begin
     Dec(FWaitCounter);
     lblTimer.Caption := IntToStr(FWaitCounter);
     if FWaitCounter = 0 then
-    begin
       TimerOff;
-    end;
   end;
 end;
 
@@ -2809,9 +2822,7 @@ procedure TfrmMain.tsChargeEnter(Sender: TObject);
 begin
   FixLabels(-1);
   if rgCharge.ItemIndex = -1 then
-  begin
     btnStart.Enabled := False;
-  end;
 end;
 
 procedure TfrmMain.tsDischargeEnter(Sender: TObject);
