@@ -702,17 +702,18 @@ var
   T: TDateTime;
   chkIsValid : boolean;
   chk : char;
+  TSec : longint;
 begin
   result := false;
   if FSampleCounter > 0 then
   begin
     dT := MillisecondsBetween(ANow, FLastTime);
   end else
-  begin
     dT := 2000;
-  end;
 
   T := ANow - FStartTime;
+  TSec := SecondsBetween(ANow,FStartTime);
+  if (TSec < 0) then tSec := 0;
 
   chkIsValid := frmSettings.cgSettings.Checked[cIgnoreCRC];
   if not chkIsValid then
@@ -768,11 +769,12 @@ begin
       SetLength(FData, Length(FData) + 1);
       with FData[Length(FData) - 1] do
       begin
-        vTime := DecodeTimer(Copy(APacket, 15, 2));
+        //vTime := DecodeTimer(Copy(APacket, 15, 2));
+
         vVoltage := FLastU;
         vCurrent := FLastI;
         if mm_AutoLog.Checked then
-          SaveCSVLine(FLogFile, vTime, FLastI, FLastU);
+          SaveCSVLine(FLogFile, TSec{vTime}, FLastI, FLastU);
       end;
       lsVoltage.AddXY(T, FLastU);
       lsInvisibleVoltage.AddXY(0, Round1V(FLastU));

@@ -76,11 +76,11 @@ object frmMain: TfrmMain
       Height = 382
       Top = 306
       Width = 290
-      ActivePage = tsDischarge
+      ActivePage = tsProgram
       Anchors = [akTop, akRight, akBottom]
       BorderSpacing.Right = 2
       Constraints.MaxWidth = 290
-      TabIndex = 1
+      TabIndex = 2
       TabOrder = 2
       OnChange = pcProgramChange
       object tsCharge: TTabSheet
