@@ -12,7 +12,7 @@ uses
   JLabeledFloatEdit, settings, typinfo, types, lcltype, connectform, aboutform, ExtCtrls;
 
 const
-  cVersion = 'EBC Controller v2.14';
+  cVersion = 'EBC Controller v2.16';
 
   cConnectRetries = 10;
 
@@ -109,9 +109,17 @@ const
   cSettings = 'Settings';
   cConf = '.conf';
   cInit = '.init';
-  cSaveDir = 'SaveDir';
+// for using the same directory/conf file for Linux and Windows
+{$ifdef Windows}
+  cSaveDir  = 'SaveDir-Win';
+  cLogDir   = 'LogDir-Win';
+  cStepDir  = 'StepFileDir-Win';
+{$else}
+  cSaveDir  = 'SaveDir';
   cLogDir   = 'LogDir';
   cStepDir  = 'StepFileDir';
+{$endif}
+
   cTabIndex = 'TabIndex';
   cReadOnly = 'ReadOnly';
   cMonitor  = 'Monitor';
@@ -121,8 +129,11 @@ const
   cWinMaximized = 'Maximized';
   cWinWidth = 'Width';
   cWinHeight = 'Height';
+  cWinTop    = 'Top';
+  cWinLeft   = 'Left';
   cAppSec = 'Application';
   cSerial = 'Serial';
+  cRightHSplitterPos = 'RightHSplitterPos';
 
   cFatal = 'Fatal Error';
   cError = 'Error';
@@ -175,8 +186,7 @@ type
 
   TCSVData = record
     vTime: Integer;
-    vVoltage: Extended;
-    vCurrent: Extended;
+    vVoltage,vCurrent,CapacityEBC,CapacityLocal: Extended;
   end;
 
   TPacket = record
@@ -308,8 +318,7 @@ type
     sdCSV: TSaveDialog;
     shaCapI: TShape;
     MainStatusBar: TStatusBar;
-    LogSplitter: TSplitter;
-    Splitter1: TSplitter;
+    RightHSplitter: TSplitter;
     stStepFile: TStaticText;
     ReconnectTimer: TTimer;
     ConnectionWatchdogTimer: TTimer;
@@ -429,7 +438,7 @@ type
     function DecodeCharge(Data: string): Extended;
     function DecodeTimer(Data: string): Integer;
     function EncodeTimer(Data: Integer): string;
-    procedure SaveCSVLine(var f: Text; ATime: Integer; ACurrent: Extended; AVoltage: Extended);
+    procedure SaveCSVLine(var f: Text; ATime: Integer; ACurrent: Extended; AVoltage: Extended; CapacityEBC: Extended; CapacityLocal: Extended);
     procedure SaveCSV(AFile: string);
     function GetHexPacketFromIni(AIniFile: TMyIniFile; ASection: string; AIdent: string; ADefault: string = ''): string;
     procedure LoadPackets;
@@ -628,17 +637,20 @@ var
   N: Integer;
   E: TDateTime;
   startFound: boolean;
+  rBuf: string;
 begin
   r := '';
   N := 0;
   E := Now;
   startFound := false;
+  rBuf := '';
 
   // AD: wait for start char
   repeat
     s := Serial.ReadData;
     if Length(s) > 0 then
     begin
+      rBuf := rBuf + s;
       while (length(s) > 0) and (s[1] <> #$FA) do
         delete(s,1,1);
       if (length(s) > 0) then
@@ -655,42 +667,47 @@ begin
     if Length(s) > 0 then
     begin
       r := r + s;
+      rBuf := rBuf + s;
       Inc(N, Length(s));
     end;
-  until (N = 19) or (MillisecondsBetween(Now, E) > 200);
-
-  if N = 19 then
+  until (N >= 19) or (MillisecondsBetween(Now, E) > 200);
+  DumpSerialData('<',format('len:%d ',[N]), rBuf, 0);
+  while N >= 19 do
   begin
-    if InterpretPackage(r, E) then  // false if checksum is invalid
+    s := copy(r,1,19); delete(r,1,19); dec(N,19);
+    if length(s) = 19 then
     begin
-      FRecvStatusIndicator := FRecvStatusIndicator + FRecvStatusIndicatorInc;
-      MainStatusBar.invalidate;
-      Application.ProcessMessages;
-      if FConnState = csConnecting then
+      if InterpretPackage(s, E) then  // false if checksum is invalid
       begin
-        FModel := GetModelIndex(Ord(r[17]));
-        if FModel > -1 then
+        FRecvStatusIndicator := FRecvStatusIndicator + FRecvStatusIndicatorInc;
+        MainStatusBar.invalidate;
+        //Application.ProcessMessages;
+        if FConnState = csConnecting then
         begin
-          ReconnectTimer.Enabled:=false;
-          ConnectionWatchdogTimer.Enabled:=true;
-          setStatusLine(cst_ConnectionStatus,cConnected);
-          setStatusLine(cst_ConnectedModel,FModels[FModel].Name);
-          tbxMonitor.Enabled := True;
-          FConnState := csConnected;
-          FUFactor := FModels[FModel].UFactor;
-          FIFactor := FModels[FModel].IFactor;
-          setChargeDischargeTypes(FModel);
-          edtChargeV.Enabled:=false;
-          frmStep.setDevice(FModels[FModel].Name);
+          FModel := GetModelIndex(Ord(s[17]));
+          if FModel > -1 then
+          begin
+            ReconnectTimer.Enabled:=false;
+            ConnectionWatchdogTimer.Enabled:=true;
+            setStatusLine(cst_ConnectionStatus,cConnected);
+            setStatusLine(cst_ConnectedModel,FModels[FModel].Name);
+            tbxMonitor.Enabled := True;
+            FConnState := csConnected;
+            FUFactor := FModels[FModel].UFactor;
+            FIFactor := FModels[FModel].IFactor;
+            setChargeDischargeTypes(FModel);
+            edtChargeV.Enabled:=false;
+            frmStep.setDevice(FModels[FModel].Name);
+          end;
+        end else
+        begin
+          ConnectionWatchdogTimer.Enabled:=false;
+          ConnectionWatchdogTimer.Enabled:=true;  // does this reset the timer ?
         end;
-      end else
-      begin
-        ConnectionWatchdogTimer.Enabled:=false;
-        ConnectionWatchdogTimer.Enabled:=true;  // does this reset the timer ?
-      end;
-    end
-    else
-      doLog(Format('<%s invalid checksum',[r]));
+      end
+      else
+        doLog(Format('<%s invalid checksum',[r]));
+    end;
   end;
   FLastTime := E;
 end;
@@ -726,23 +743,33 @@ begin
   begin
     if frmSettings.cgSettings.Checked[cLogRecData] then
        DumpSerialData('<','',APacket,crcrecvpos);
+
     result := true;
-    FLastI := DecodeCurrent(Copy(APacket, 3, 2));
-    FLastU := DecodeVoltage(Copy(APacket, 5, 2));
+    try
+      FLastI := DecodeCurrent(Copy(APacket, 3, 2));
+    except
+      on e:exception do
+        doLog(format('DecodeCurrent raised %s (%2x%2x)',[e.Message,byte(APacket[3]), byte(APacket[4])]));
+    end;
+    try
+      FLastU := DecodeVoltage(Copy(APacket, 5, 2));
+    except
+      on e:exception do
+        doLog(format('DecodeVoltage raised %s (%2x%2x)',[e.Message,byte(APacket[5]), byte(APacket[6])]));
+    end;
 
     FCurrentCapacity[caEBC] := DecodeCharge(Copy(APacket, 7, 2));
     FCurrentCapacity[caLocal] := FCurrentCapacity[caLocal] + FLastI * dT / 3600000;
-//    DumpChkSum(FloatToStr(FCurrentCapacity[caEBC]), APacket, crcrecvpos);
 
     stText[cstVoltage].Caption := MyFloatStr(FLastU) + 'V';
     stText[cstCurrent].Caption := MyFloatStr(FLastI) + 'A';
     P := FLastU * FLastI;
     stText[cstPower].Caption := FloatToStrF(P, ffFixed, 18, 3) + 'W';
 
-    if FCurrentCapacity[caEBC] < 10 then
-      stText[cstCapacity].Caption := GetCharge(FCurrentCapacity[caEBC])
-    else
-      stText[cstCapacity].Caption := 'See device';
+    //if FCurrentCapacity[caEBC] < 10 then
+    stText[cstCapacity].Caption := GetCharge(FCurrentCapacity[caEBC]);
+    //else
+    //  stText[cstCapacity].Caption := 'See device';  // FIXME, AD: fixed GetCharge
 
     stText[cstCapLocal].Caption := GetCharge(FCurrentCapacity[caLocal]) + '(PC)';
     tmp := (P * dT) / 3600000;
@@ -770,11 +797,13 @@ begin
       with FData[Length(FData) - 1] do
       begin
         //vTime := DecodeTimer(Copy(APacket, 15, 2));
-
+        // AD: use time from PC
         vVoltage := FLastU;
         vCurrent := FLastI;
+        CapacityEBC := FCurrentCapacity[caEBC];
+        CapacityLocal := FCurrentCapacity[caLocal];
         if mm_AutoLog.Checked then
-          SaveCSVLine(FLogFile, TSec{vTime}, FLastI, FLastU);
+          SaveCSVLine(FLogFile, TSec{vTime}, FLastI, FLastU, FCurrentCapacity[caEBC], FCurrentCapacity[caLocal]);
       end;
       lsVoltage.AddXY(T, FLastU);
       lsInvisibleVoltage.AddXY(0, Round1V(FLastU));
@@ -820,8 +849,6 @@ begin
       FDelta[FDeltaIndex].Values := 0;
       FDelta[FDeltaIndex].Time := ANow;
     end;
-
-//    DumpChkSum('R:', APacket, crcrecvpos);
 
     Inc(FSampleCounter);
 
@@ -874,7 +901,10 @@ begin
     s := s + LowerCase(IntToHex(Ord(snd[I]),2));
 //    if I < Length(snd) then s := s + '|';
   end;
-  DoHexLog(prefix + ' ' + s + ' ' + IntToHex(Ord(checksum(snd, Pos)),2) + ' ' + postfix);
+  if (pos > 0) and (pos <= length(snd)) then
+    DoHexLog(prefix + ' ' + s + ' ' + IntToHex(Ord(checksum(snd, Pos)),2) + ' ' + postfix)
+  else
+    DoHexLog(prefix + ' ' + s + ' ' + postfix);
 end;
 
 procedure TfrmMain.SendData(snd: string);
@@ -936,12 +966,14 @@ end;
 
 function TfrmMain.DecodeCurrent(Data: string): Extended;
 begin
-  Result := (Ord(Data[1])*2400 + 10*Ord(Data[2])) / 1000 / FIFactor;
+  Result := (Ord(Data[1])*2400 + 10*Ord(Data[2])) / 1000;
+  if FIFactor > 0 then result := Result / FIFactor;
 end;
 
 function TfrmMain.DecodeVoltage(Data: string): Extended;
 begin
-  Result := (Ord(Data[1])*2400 + 10*Ord(Data[2])) / 10000 / FUFactor;
+  Result := (Ord(Data[1])*2400 + 10*Ord(Data[2])) / 10000;
+  if FUFactor > 0 then Result := Result / FUFactor;
 end;
 
 function TfrmMain.DecodeCharge(Data: string): Extended;
@@ -973,9 +1005,9 @@ begin
 end;
 
 procedure TfrmMain.SaveCSVLine(var f: Text; ATime: Integer; ACurrent: Extended;
-  AVoltage: Extended);
+  AVoltage: Extended; CapacityEBC: Extended; CapacityLocal: Extended);
 begin
-  WriteLn(f, ATime, ',', #9, MyFloatStr(ACurrent), ',', #9, MyFloatStr(AVoltage));
+  WriteLn(f, ATime, #9, MyFloatStr(ACurrent), #9, MyFloatStr(AVoltage), #9, MyFloatStr(CapacityEBC), #9, MyFloatStr(CapacityLocal));
 end;
 
 
@@ -988,9 +1020,7 @@ begin
   AssignFile(f, AFile);
   Rewrite(f);
   for I := 0 to Length(FData) - 1 do
-  begin
-    SaveCSVLine(f, FData[I].vTime, FData[I].vCurrent, FDAta[I].vVoltage);
-  end;
+    SaveCSVLine(f, FData[I].vTime, FData[I].vCurrent, FData[I].vVoltage, FData[I].CapacityEBC, FData[I].CapacityLocal);
   Flush(f);
   CloseFile(f);
 end;
@@ -1434,23 +1464,17 @@ end;
 function TfrmMain.GetEnergy(AEnergy: Extended): string;
 begin
   if FShowJoule then
-  begin
-    Result := MyFloatStr(AEnergy * 3.600) + 'kJ';
-  end else
-  begin
+    Result := MyFloatStr(AEnergy * 3.600) + 'kJ'
+  else
     Result := MyFloatStr(AEnergy) + 'Wh';
-  end;
 end;
 
 function TfrmMain.GetCharge(ACharge: Extended): string;
 begin
   if FShowCoulomb then
-  begin
-    Result := FloatToStrF(ACharge * 3600, ffFixed, 18, 1) + 'As';
-  end else
-  begin
+    Result := FloatToStrF(ACharge * 3600, ffFixed, 18, 1) + 'As'
+  else
     Result := MyFloatStr(ACharge) + 'Ah';
-  end;
 end;
 
 procedure TfrmMain.FreezeEdits;
@@ -1665,9 +1689,8 @@ begin
   frmStep.SetInitialDir(t);
 
   for I := 0 to frmSettings.cgSettings.Items.Count - 1 do
-  begin
     frmSettings.cgSettings.Checked[I] := ini.ReadBool(cSettings, cChkSetting + '_' + IntToStr(I), False);
-  end;
+
   if frmSettings.cgSettings.Checked[cAutoLoad] then
     if Length(frmSettings.edtProgFile.FileName) > 0 then
     begin
@@ -1680,13 +1703,25 @@ begin
   frmSettings.edtIntTime.Value := ini.ReadInteger(cSettings, cIntTime, 60);
   tbxMonitor.Checked := ini.ReadBool(cSettings, cMonitor, True);
 
-  frmMain.Width := ini.ReadInteger(cAppSec, cWinWidth, frmMain.Width);
+  i := ini.ReadInteger(cAppSec, cWinLeft, frmMain.Left);
+  if (i >= screen.Width - 100) or (i < 0) then i := 10;
+  frmMain.Left := i;
+  frmMain.Top := ini.ReadInteger(cAppSec, cWinTop, frmMain.Top);
+
+  i := ini.ReadInteger(cAppSec, cWinWidth, frmMain.Width);
+  if (frmMain.Left + i > screen.Width) or (i < 0) then
+    i := screen.Width - frmMain.Left - 10;
+  frmMain.Width := i;
+
   frmMain.Height := ini.ReadInteger(cAppSec, cWinHeight, frmMain.Height);
+  RightHSplitter.Top := ini.ReadInteger(cAppSec, cRightHSplitterPos, RightHSplitter.Top);
   if ini.ReadBool(cAppSec, cWinMaximized, False) then
-  begin
     frmMain.WindowState := wsMaximized;
-  end;
+{$ifdef Windows}
+  frmconnect.edtDevice.Text := ini.ReadString(cAppSec, cSerial, 'COM1');
+{$else}
   frmconnect.edtDevice.Text := ini.ReadString(cAppSec, cSerial, '/dev/ttyUSB0');
+{$endif}
   mm_AutoLog.Checked := ini.readBool(cAppSec, cAutoLog, false);
   mm_AutoCsvFileName.Checked := ini.readBool(cAppSec, cAutoCsvFileName, true);
 
@@ -1727,8 +1762,12 @@ begin
   ini.WriteBool(cSettings, cMonitor, tbxMonitor.Checked);
 
   ini.WriteBool(cAppSec, cWinMaximized, (frmMain.WindowState = wsMaximized));
+  ini.WriteInteger(cAppSec, cWinLeft, frmMain.Left);
+  ini.WriteInteger(cAppSec, cWinTop, frmMain.Top);
   ini.WriteInteger(cAppSec, cWinWidth, frmMain.Width);
+
   ini.WriteInteger(cAppSec, cWinHeight, frmMain.Height);
+  ini.WriteInteger(cAppSec, cRightHSplitterPos, RightHSplitter.Top);
   ini.WriteString(cAppSec, cSerial, frmconnect.edtDevice.Text);
   ini.WriteBool(cAppSec, cAutoLog, mm_AutoLog.Checked);
   ini.WriteBool(cAppSec, cAutoCsvFileName, mm_AutoCsvFileName.Checked);
@@ -2567,7 +2606,11 @@ begin
     stText[I].Tag := I;
     stText[I].OnClick := @stTextClick;
     stText[I].Parent := gbStatus;
+{$ifdef Windows}
+    stText[I].Font.Name := 'Courier New';
+{$else}
     stText[I].Font.Name := 'Liberation Mono';
+{$endif}
     stText[I].Font.Size := 12;
     stText[I].Font.Style := [fsBold];
     stText[I].Height := 24;
@@ -2742,14 +2785,22 @@ end;
 
 procedure TfrmMain.MainStatusBarDrawPanel(StatusBar: TStatusBar;
   Panel: TStatusPanel; const Rect: TRect);
+var
+  drawHeight : integer;
 begin
+//{$ifdef windows}
+  drawHeight := MainStatusBar.height-5;
+//{$else}
+//  drawHeight := MainStatusBar.Canvas.height-6;
+//{$endif}
+
   if Panel = MainStatusBar.Panels[cst_ConnectionState] then
   begin
     if FConnState = csConnected then
       with MainStatusBar.Canvas do
       begin
         Brush.Color := cldefault;
-        rectangle(2,5,MainStatusBar.Panels[cst_ConnectionState].width-2,height-6);
+        rectangle(2,5,MainStatusBar.Panels[cst_ConnectionState].width-2,drawHeight);
         if (FRecvStatusIndicator >= MainStatusBar.Panels[cst_ConnectionState].width-10) then
         begin
           FRecvStatusIndicator := MainStatusBar.Panels[cst_ConnectionState].width-10;
@@ -2761,7 +2812,7 @@ begin
            FRecvStatusIndicatorInc := 1;
         end;
         Brush.Color := clblue;
-        rectangle(FRecvStatusIndicator+3,6,FRecvStatusIndicator+7,Height-7);
+        rectangle(FRecvStatusIndicator+3,6,FRecvStatusIndicator+7,drawHeight-1);
       end;
   end;
 end;

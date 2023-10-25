@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, StdCtrls, Menus,
-  SynEdit, SynHighlighterAny, lineparser, LCLType, ExtCtrls, ActnList;
+  SynEdit, SynHighlighterAny, lineparser, LCLType, ExtCtrls, ActnList, ComCtrls, SynEditTypes;
 
 const
   cNaN = 10E999;
@@ -68,6 +68,7 @@ type
   TfrmStep = class(TForm)
     edtDevice: TComboBox;
     edtDeviceLabel: TLabel;
+    lblXY: TLabel;
     OkButton: TButton;
     MainMenu1: TMainMenu;
     Memo1: TMemo;
@@ -94,8 +95,10 @@ type
     memStep: TSynEdit;
     odOpen: TOpenDialog;
     DevicePanel: TPanel;
+    StatusPanel: TPanel;
     sdSave: TSaveDialog;
     SynStepHighlighter: TSynAnySyn;
+    procedure memStepStatusChange(Sender: TObject; Changes: TSynStatusChanges);
     procedure setDevice(deviceName : string);
     procedure edtDeviceChange(Sender: TObject);
     procedure OkButtonClick(Sender: TObject);
@@ -446,6 +449,10 @@ procedure TfrmStep.FormCreate(Sender: TObject);
 begin
   FCompiled := False;
   FInitialDirIsSet := False;
+  {$ifdef windows}
+  Memo1.Font.Name := 'Courier New'; //'DejaVu Sans Mono';
+  memStep.Font.Name := 'Courier New';
+  {$endif}
 end;
 
 procedure TfrmStep.OkButtonClick(Sender: TObject);
@@ -467,6 +474,12 @@ procedure TfrmStep.setDevice(deviceName : string);
 begin
   edtDevice.Text := deviceName;
   edtDeviceChange(self);
+end;
+
+procedure TfrmStep.memStepStatusChange(Sender: TObject;
+  Changes: TSynStatusChanges);
+begin
+  lblXY.Caption := format('%d: %d',[MemStep.CaretX,MemStep.CaretY]);
 end;
 
 procedure TfrmStep.edtDeviceChange(Sender: TObject);
@@ -499,6 +512,7 @@ begin
               d.add (copy(command,3,255));
               SynStepHighlighter.KeyWords.Add(Command);
             end;
+            mNone,mDischargeCP, mDischargeCR: ;  // to avoid warnings
           end;
         end;
     memStep.ReadOnly:=false;

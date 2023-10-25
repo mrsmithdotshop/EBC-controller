@@ -1,7 +1,7 @@
 object frmStep: TfrmStep
-  Left = 388
+  Left = 327
   Height = 557
-  Top = 398
+  Top = 174
   Width = 994
   BorderIcons = [biSystemMenu]
   Caption = 'Unsaved'
@@ -483,6 +483,7 @@ object frmStep: TfrmStep
     LineHighlightColor.Background = clNone
     LineHighlightColor.Foreground = clNone
     OnChange = memStepChange
+    OnStatusChange = memStepStatusChange
     inline SynLeftGutterPartList1: TSynGutterPartList
       object SynGutterMarks1: TSynGutterMarks
         Width = 24
@@ -548,6 +549,7 @@ object frmStep: TfrmStep
     Height = 42
     Top = 152
     Width = 992
+    Anchors = [akTop, akLeft, akRight]
     ClientHeight = 42
     ClientWidth = 992
     TabOrder = 3
@@ -568,9 +570,26 @@ object frmStep: TfrmStep
       Left = 25
       Height = 19
       Top = 10
-      Width = 44
-      Caption = 'Devic&e'
+      Width = 48
+      Caption = 'Devic&e:'
       FocusControl = edtDevice
+      ParentColor = False
+    end
+  end
+  object StatusPanel: TPanel
+    Left = 6
+    Height = 50
+    Top = 529
+    Width = 890
+    Anchors = [akLeft, akRight, akBottom]
+    ClientHeight = 50
+    ClientWidth = 890
+    TabOrder = 4
+    object lblXY: TLabel
+      Left = 0
+      Height = 1
+      Top = 5
+      Width = 1
     end
   end
   object MainMenu1: TMainMenu
