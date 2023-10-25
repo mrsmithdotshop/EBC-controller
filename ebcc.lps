@@ -3,11 +3,11 @@
   <ProjectSession>
     <Version Value="12"/>
     <BuildModes Active="Debug"/>
-    <Units Count="22">
+    <Units Count="26">
       <Unit0>
         <Filename Value="ebcc.lpr"/>
         <IsPartOfProject Value="True"/>
-        <EditorIndex Value="7"/>
+        <EditorIndex Value="11"/>
         <CursorPos Y="23"/>
         <UsageCount Value="205"/>
         <Loaded Value="True"/>
@@ -18,9 +18,10 @@
         <ComponentName Value="frmMain"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
+        <IsVisibleTab Value="True"/>
         <EditorIndex Value="4"/>
-        <TopLine Value="131"/>
-        <CursorPos X="79" Y="157"/>
+        <TopLine Value="2209"/>
+        <CursorPos Y="2225"/>
         <ExtraEditorCount Value="1"/>
         <ExtraEditor1>
           <EditorIndex Value="-1"/>
@@ -32,7 +33,7 @@
         <Bookmarks Count="5">
           <Item0 X="25" Y="670"/>
           <Item1 Y="628" ID="9"/>
-          <Item2 X="3" Y="2222" ID="4"/>
+          <Item2 X="3" Y="2223" ID="4"/>
           <Item3 X="7" Y="2192" ID="5"/>
           <Item4 X="57" Y="1769" ID="3"/>
         </Bookmarks>
@@ -46,9 +47,6 @@
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="StepForm"/>
-        <IsVisibleTab Value="True"/>
-        <TopLine Value="491"/>
-        <CursorPos Y="504"/>
         <ExtraEditorCount Value="1"/>
         <ExtraEditor1>
           <EditorIndex Value="-1"/>
@@ -79,7 +77,7 @@
         <ComponentName Value="frmConnect"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-        <EditorIndex Value="6"/>
+        <EditorIndex Value="10"/>
         <TopLine Value="66"/>
         <CursorPos X="48" Y="83"/>
         <UsageCount Value="212"/>
@@ -93,8 +91,8 @@
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="aboutForm"/>
-        <EditorIndex Value="5"/>
-        <TopLine Value="44"/>
+        <EditorIndex Value="9"/>
+        <TopLine Value="37"/>
         <CursorPos X="38" Y="52"/>
         <UsageCount Value="200"/>
         <Loaded Value="True"/>
@@ -222,125 +220,161 @@
         <CursorPos X="14" Y="31"/>
         <UsageCount Value="11"/>
       </Unit21>
+      <Unit22>
+        <Filename Value="/home/ad/lazarus-snap/lazarus/lcl/customtimer.pas"/>
+        <UnitName Value="CustomTimer"/>
+        <EditorIndex Value="5"/>
+        <TopLine Value="139"/>
+        <CursorPos Y="155"/>
+        <UsageCount Value="10"/>
+        <Loaded Value="True"/>
+      </Unit22>
+      <Unit23>
+        <Filename Value="/home/ad/lazarus-snap/lazarus/lcl/interfaces/gtk2/gtk2callback.inc"/>
+        <EditorIndex Value="6"/>
+        <TopLine Value="2790"/>
+        <CursorPos X="72" Y="2808"/>
+        <UsageCount Value="10"/>
+        <Loaded Value="True"/>
+      </Unit23>
+      <Unit24>
+        <Filename Value="/home/ad/lazarus-snap/lazarus/lcl/interfaces/gtk2/gtk2widgetset.inc"/>
+        <EditorIndex Value="7"/>
+        <TopLine Value="2570"/>
+        <CursorPos Y="2587"/>
+        <UsageCount Value="10"/>
+        <Loaded Value="True"/>
+      </Unit24>
+      <Unit25>
+        <Filename Value="/home/ad/lazarus-snap/lazarus/lcl/include/application.inc"/>
+        <EditorIndex Value="8"/>
+        <TopLine Value="1410"/>
+        <CursorPos Y="1433"/>
+        <UsageCount Value="10"/>
+        <Loaded Value="True"/>
+      </Unit25>
     </Units>
     <Debugger>
       <Backend Value="IDE"/>
     </Debugger>
     <JumpHistory Count="30" HistoryIndex="29">
       <Position1>
-        <Filename Value="aboutform.pas"/>
-        <Caret Line="53" Column="34" TopLine="30"/>
+        <Filename Value="main.pas"/>
+        <Caret Line="1712" Column="50" TopLine="1696"/>
       </Position1>
       <Position2>
-        <Filename Value="aboutform.pas"/>
-        <Caret Line="42" Column="38" TopLine="30"/>
+        <Filename Value="main.pas"/>
       </Position2>
       <Position3>
-        <Filename Value="aboutform.pas"/>
-        <Caret Line="52" Column="39" TopLine="42"/>
+        <Filename Value="stepform.pas"/>
+        <Caret Line="276" Column="24" TopLine="251"/>
       </Position3>
       <Position4>
-        <Filename Value="aboutform.pas"/>
-        <Caret Line="53" Column="34" TopLine="42"/>
+        <Filename Value="stepform.pas"/>
+        <Caret Line="504" TopLine="491"/>
       </Position4>
       <Position5>
-        <Filename Value="aboutform.pas"/>
-        <Caret Line="9" Column="64"/>
+        <Filename Value="main.pas"/>
+        <Caret Line="158" Column="79" TopLine="131"/>
       </Position5>
       <Position6>
-        <Filename Value="aboutform.pas"/>
-        <Caret Line="53" Column="28" TopLine="44"/>
+        <Filename Value="main.pas"/>
+        <Caret Line="751" Column="92" TopLine="52"/>
       </Position6>
       <Position7>
         <Filename Value="main.pas"/>
-        <Caret Line="15" Column="35"/>
+        <Caret Line="2224" Column="8" TopLine="2198"/>
       </Position7>
       <Position8>
         <Filename Value="main.pas"/>
-        <Caret Line="1246" Column="40" TopLine="1231"/>
+        <Caret Line="2225" Column="3" TopLine="2198"/>
       </Position8>
       <Position9>
         <Filename Value="main.pas"/>
-        <Caret Line="1674" Column="49" TopLine="1665"/>
+        <Caret Line="2226" TopLine="2200"/>
       </Position9>
       <Position10>
-        <Filename Value="main.pas"/>
+        <Filename Value="/home/ad/lazarus-snap/lazarus/lcl/customtimer.pas"/>
+        <Caret Line="180" TopLine="164"/>
       </Position10>
       <Position11>
-        <Filename Value="main.pas"/>
-        <Caret Line="135" Column="3" TopLine="113"/>
+        <Filename Value="/home/ad/lazarus-snap/lazarus/lcl/customtimer.pas"/>
+        <Caret Line="155" TopLine="139"/>
       </Position11>
       <Position12>
-        <Filename Value="main.pas"/>
-        <Caret Line="672" Column="3" TopLine="661"/>
+        <Filename Value="/home/ad/lazarus-snap/lazarus/lcl/interfaces/gtk2/gtk2callback.inc"/>
+        <Caret Line="2786" TopLine="2771"/>
       </Position12>
       <Position13>
-        <Filename Value="main.pas"/>
-        <Caret Line="1258" Column="29" TopLine="1240"/>
+        <Filename Value="/home/ad/lazarus-snap/lazarus/lcl/interfaces/gtk2/gtk2callback.inc"/>
+        <Caret Line="2793" TopLine="2771"/>
       </Position13>
       <Position14>
-        <Filename Value="main.pas"/>
-        <Caret Line="1772" Column="39" TopLine="1751"/>
+        <Filename Value="/home/ad/lazarus-snap/lazarus/lcl/interfaces/gtk2/gtk2callback.inc"/>
+        <Caret Line="2796" TopLine="2771"/>
       </Position14>
       <Position15>
-        <Filename Value="main.pas"/>
-        <Caret Line="1122" Column="14" TopLine="1111"/>
+        <Filename Value="/home/ad/lazarus-snap/lazarus/lcl/interfaces/gtk2/gtk2callback.inc"/>
+        <Caret Line="2799" TopLine="2774"/>
       </Position15>
       <Position16>
-        <Filename Value="main.pas"/>
+        <Filename Value="/home/ad/lazarus-snap/lazarus/lcl/interfaces/gtk2/gtk2callback.inc"/>
+        <Caret Line="2805" TopLine="2790"/>
       </Position16>
       <Position17>
-        <Filename Value="main.pas"/>
-        <Caret Line="135" Column="13" TopLine="114"/>
+        <Filename Value="/home/ad/lazarus-snap/lazarus/lcl/interfaces/gtk2/gtk2callback.inc"/>
+        <Caret Line="2808" Column="72" TopLine="2790"/>
       </Position17>
       <Position18>
-        <Filename Value="main.pas"/>
-        <Caret Line="1707" Column="90" TopLine="1686"/>
+        <Filename Value="/home/ad/lazarus-snap/lazarus/lcl/interfaces/gtk2/gtk2widgetset.inc"/>
+        <Caret Line="2586" TopLine="2570"/>
       </Position18>
       <Position19>
-        <Filename Value="main.pas"/>
-        <Caret Line="1790" Column="57" TopLine="1767"/>
+        <Filename Value="/home/ad/lazarus-snap/lazarus/lcl/interfaces/gtk2/gtk2widgetset.inc"/>
+        <Caret Line="2587" TopLine="2570"/>
       </Position19>
       <Position20>
-        <Filename Value="main.pas"/>
-        <Caret Line="1754" Column="29" TopLine="1744"/>
+        <Filename Value="/home/ad/lazarus-snap/lazarus/lcl/include/application.inc"/>
+        <Caret Line="464" TopLine="449"/>
       </Position20>
       <Position21>
-        <Filename Value="main.pas"/>
+        <Filename Value="/home/ad/lazarus-snap/lazarus/lcl/include/application.inc"/>
+        <Caret Line="465" TopLine="449"/>
       </Position21>
       <Position22>
-        <Filename Value="main.pas"/>
-        <Caret Line="131" Column="3" TopLine="114"/>
+        <Filename Value="/home/ad/lazarus-snap/lazarus/lcl/include/application.inc"/>
+        <Caret Line="466" TopLine="449"/>
       </Position22>
       <Position23>
-        <Filename Value="main.pas"/>
-        <Caret Line="1708" Column="54" TopLine="1689"/>
+        <Filename Value="/home/ad/lazarus-snap/lazarus/lcl/include/application.inc"/>
+        <Caret Line="468" TopLine="449"/>
       </Position23>
       <Position24>
-        <Filename Value="main.pas"/>
-        <Caret Line="1758" Column="51" TopLine="1739"/>
+        <Filename Value="/home/ad/lazarus-snap/lazarus/lcl/include/application.inc"/>
+        <Caret Line="1287" TopLine="1271"/>
       </Position24>
       <Position25>
-        <Filename Value="main.pas"/>
-        <Caret Line="1712" Column="50" TopLine="1696"/>
+        <Filename Value="/home/ad/lazarus-snap/lazarus/lcl/include/application.inc"/>
+        <Caret Line="1289" TopLine="1271"/>
       </Position25>
       <Position26>
-        <Filename Value="stepform.pas"/>
-        <Caret Line="507" Column="20" TopLine="491"/>
+        <Filename Value="/home/ad/lazarus-snap/lazarus/lcl/include/application.inc"/>
+        <Caret Line="1426" TopLine="1410"/>
       </Position26>
       <Position27>
-        <Filename Value="stepform.pas"/>
+        <Filename Value="main.pas"/>
+        <Caret Line="2224" Column="6" TopLine="2200"/>
       </Position27>
       <Position28>
         <Filename Value="main.pas"/>
-        <Caret Line="1712" Column="50" TopLine="1696"/>
       </Position28>
       <Position29>
         <Filename Value="main.pas"/>
+        <Caret Line="2193" Column="32" TopLine="2166"/>
       </Position29>
       <Position30>
-        <Filename Value="stepform.pas"/>
-        <Caret Line="276" Column="24" TopLine="251"/>
+        <Filename Value="main.pas"/>
+        <Caret Line="2215" Column="114" TopLine="2209"/>
       </Position30>
     </JumpHistory>
     <RunParams>
@@ -348,4 +382,15 @@
       <Modes ActiveMode=""/>
     </RunParams>
   </ProjectSession>
+  <Debugging>
+    <BreakPoints>
+      <Item>
+        <Kind Value="bpkSource"/>
+        <WatchScope Value="wpsLocal"/>
+        <WatchKind Value="wpkWrite"/>
+        <Source Value="main.pas"/>
+        <Line Value="2225"/>
+      </Item>
+    </BreakPoints>
+  </Debugging>
 </CONFIG>

@@ -748,7 +748,7 @@ begin
     try
       FLastI := DecodeCurrent(Copy(APacket, 3, 2));
     except
-      on e:exception do
+      on e:exception do  // was for divide by zero check, only visible under windows, fixed
         doLog(format('DecodeCurrent raised %s (%2x%2x)',[e.Message,byte(APacket[3]), byte(APacket[4])]));
     end;
     try
@@ -2190,6 +2190,7 @@ begin
       mm_Disconnect.Enabled:=false;
       MainStatusBar.invalidate;
       ConnectionWatchdogTimer.Enabled := false;
+      btnStart.Enabled := False;
     end;
   except
     FConnState := csNone;
@@ -2220,7 +2221,8 @@ end;
 procedure TfrmMain.ConnectionWatchdogTimerTimer(Sender: TObject);
 begin
   ConnectionWatchdogTimer.Enabled := false;
-  if fConnState = csConnected then mm_ConnectClick(Sender);
+  if fConnState = csConnected then
+     mm_ConnectClick(Sender);
   MessageDlg('Connection Lost','Timout waiting for a packed from charger device', mtError,[mbOk],0);
 end;
 
