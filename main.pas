@@ -9,9 +9,15 @@ uses
   EditBtn, ComCtrls, Menus, Buttons, ActnList, TAGraph, TASeries,
   TAIntervalSources, TATransformations, TATools, LazSerial, DateUtils,
   TACustomSeries, SynEdit, StepForm, MyIniFile, JLabeledIntegerEdit, math,
-  JLabeledFloatEdit, settings, typinfo, types, lcltype, connectform, aboutform, ExtCtrls;
+  JLabeledFloatEdit, settings, typinfo, types, lcltype, connectform, aboutform, ExtCtrls,
+  shortcuthelpform;
 
 const
+{$ifdef Windows}
+  cFixedFont = 'Consolas';
+{$else}
+  cFixedFont = 'Liberation Mono';
+{$endif}
   cVersion = 'EBC Controller v2.16';
 
   cConnectRetries = 10;
@@ -24,12 +30,12 @@ const
   cstCapLocal = 5;  // Capacity computed on host
   cstEnergy = 6;
   cstResistance = 8;
-  cstdV = 10;
-  cstdA = 12;
-  cstDbg1 = 13;
-  cstDbg2 = 14;
-  cstDbg3 = 15;
-  cstMax = 15;
+  cstdV = 9;
+  cstdA = 10;
+  //cstDbg1 = 13;
+  //cstDbg2 = 14;
+  //cstDbg3 = 15;
+  cstMax = 10;
 
   cConn = 'Conn';
   crcsendpos = 9;
@@ -39,7 +45,14 @@ const
   cA = 'A';
   cP = 'W';
   cR = 'Ω';
-  cCurrent = 'Current:';
+  cCurrent = 'Current';
+  cPower = 'Power';
+  cResistance = 'Resistance';
+
+  cCurrentHint= 'Set the charge/discharge current in Ampere';
+  cPowerHint  = 'Set the charge/discharge Power in Watt';
+  cResistanceHint = 'Set the charge/discharge current resistance in Ohm';
+
   cConnecting = 'Connecting...';
   cNotConnected = 'Not connected';
   cConnected = 'Connected';
@@ -132,8 +145,11 @@ const
   cWinTop    = 'Top';
   cWinLeft   = 'Left';
   cAppSec = 'Application';
+{$ifdef Windows}
+  cSerial = 'Serial-Win';
+{$else}
   cSerial = 'Serial';
-  cRightHSplitterPos = 'RightHSplitterPos';
+{$endif}
 
   cFatal = 'Fatal Error';
   cError = 'Error';
@@ -285,6 +301,8 @@ type
     MainMenu: TMainMenu;
     memLog: TMemo;
     memStepLog: TMemo;
+    mm_Shortcuts: TMenuItem;
+    mm_LogFileDir: TMenuItem;
     mm_skipStep: TMenuItem;
     mm_AutoCsvFileName: TMenuItem;
     mm_stepEdit: TMenuItem;
@@ -296,6 +314,7 @@ type
     ChargePannel: TPanel;
     DischargePanel: TPanel;
     RightPanel: TPanel;
+    SelectDirectoryDialog1: TSelectDirectoryDialog;
     Separator2: TMenuItem;
     mm_saveCsv: TMenuItem;
     mm_savePng: TMenuItem;
@@ -318,7 +337,6 @@ type
     sdCSV: TSaveDialog;
     shaCapI: TShape;
     MainStatusBar: TStatusBar;
-    RightHSplitter: TSplitter;
     stStepFile: TStaticText;
     ReconnectTimer: TTimer;
     ConnectionWatchdogTimer: TTimer;
@@ -334,11 +352,13 @@ type
     procedure mm_AutoCsvFileNameClick(Sender: TObject);
     procedure mm_AutoLogClick(Sender: TObject);
     procedure mm_ConnectClick(Sender: TObject);
+    procedure mm_LogFileDirClick(Sender: TObject);
     procedure mm_QuitClick(Sender: TObject);
     procedure mm_saveCsvClick(Sender: TObject);
     procedure mm_savePngClick(Sender: TObject);
     procedure mm_setCsvLogFileClick(Sender: TObject);
     procedure mm_SettingsClick(Sender: TObject);
+    procedure mm_ShortcutsClick(Sender: TObject);
     procedure mm_stepLoadClick(Sender: TObject);
     procedure mm_taskBarNameClick(Sender: TObject);
     procedure mniDoLogClick(Sender: TObject);
@@ -392,6 +412,8 @@ type
   public
     FPackets: array of TPacket;
   private
+    fLogFileIsOpen : boolean;
+    fLogFileName : string;
     FPacketIndex: Integer;
     FLogFile: Text;
     FRunMode: TRunMode;
@@ -802,7 +824,7 @@ begin
         vCurrent := FLastI;
         CapacityEBC := FCurrentCapacity[caEBC];
         CapacityLocal := FCurrentCapacity[caLocal];
-        if mm_AutoLog.Checked then
+        if fLogFileIsOpen then
           SaveCSVLine(FLogFile, TSec{vTime}, FLastI, FLastU, FCurrentCapacity[caEBC], FCurrentCapacity[caLocal]);
       end;
       lsVoltage.AddXY(T, FLastU);
@@ -1384,6 +1406,10 @@ begin
 end;
 
 procedure TfrmMain.EBCBreak(Force: Boolean; closeLogFile: Boolean = true);
+var
+  fn : string;
+  sl: text;
+  i : integer;
 begin
   btnSkip.Enabled := False;
   mm_skipStep.Enabled := False;
@@ -1392,23 +1418,44 @@ begin
   FChecks.TimerRunning := False;
   SendData(MakeConnPacket(smConnStop));
   RunModeOffOrMonitor;
-  if mm_AutoLog.Checked then
-    if closeLogFile then
-      StopLogging;
+  //if mm_AutoLog.Checked then
+  //  if closeLogFile then
+  //    StopLogging;
 
-  //mm_AutoLog.Enabled := True;
   if FInProgram then
   begin
     LogStep;
     if Force then
     begin
       FInProgram := False;
+      if fLogFileIsOpen then
+      begin
+        fn := ChangeFileExt(fLogFileName,'.steplog');
+        StopLogging;
+        // write the step log to the same filename as the csv but with
+        // different extension
+        if length(fn)>0 then
+        begin
+          InOutRes := 0;
+          System.assign(sl,fn);
+          Rewrite(sl);
+          if IOResult = 0 then
+          begin
+            for i := 0 to memStepLog.Lines.Count-1 do
+              writeln(sl,memStepLog.Lines[i]);
+            system.close(sl);
+          end else
+            MessageDlg(cError,Format('unable to create step logfile %s (%d)',[fn,IOResult]), mtError,[mbAbort],0);
+        end;
+      end;
+      beep;
     end else if FWaitCounter = 0 then
       LoadStep;
   end else
   begin
     OffSetting;
     StopLogging;
+    beep;
   end;
 end;
 
@@ -1654,6 +1701,30 @@ var
   ini: TMyIniFile;
   s, t: string;
   I: Integer;
+
+  procedure loadFormSize(Sec,Prefix: string; frm: TForm);
+  var i : integer;
+  begin
+    i := ini.ReadInteger(Sec, Prefix+'_Top', frm.Top);
+    if i < 0 then i := 0;
+    if i > screen.height then i := 100;
+    frm.Top := i;
+
+    i := ini.ReadInteger(Sec, Prefix+'_Left', frm.Left);
+    if i < 0 then i := 0;
+    frm.Left := i;
+
+    i := ini.ReadInteger(Sec, Prefix+'_Width', frm.Width);
+    if i < 0 then i := 100;
+    if frm.Left + i > screen.width then i := screen.width - frm.Left;
+    frm.Width := i;
+
+    i := ini.ReadInteger(Sec, Prefix+'_Height', frm.Height);
+    if i < 0 then i := 100;
+    if frm.Top + i > screen.height then i := screen.height - frm.Top;
+    frm.Height := i;
+  end;
+
 begin
   ini := TMyIniFile.Create(FConfFile);
 
@@ -1714,9 +1785,11 @@ begin
   frmMain.Width := i;
 
   frmMain.Height := ini.ReadInteger(cAppSec, cWinHeight, frmMain.Height);
-  RightHSplitter.Top := ini.ReadInteger(cAppSec, cRightHSplitterPos, RightHSplitter.Top);
   if ini.ReadBool(cAppSec, cWinMaximized, False) then
     frmMain.WindowState := wsMaximized;
+
+  loadFormSize(cAppSec,'shortcutsWinPos',frmShortcuts);
+  loadFormSize(cAppSec,'stepWinPos',frmStep);
 {$ifdef Windows}
   frmconnect.edtDevice.Text := ini.ReadString(cAppSec, cSerial, 'COM1');
 {$else}
@@ -1734,6 +1807,15 @@ var
   ini: TMyIniFile;
   s: string;
   I: Integer;
+
+  procedure saveFormSize(Sec,Prefix: string; frm: TForm);
+  begin
+    ini.WriteInteger(Sec, Prefix+'_Top', frm.Top);
+    ini.WriteInteger(Sec, Prefix+'_Left', frm.Left);
+    ini.WriteInteger(Sec, Prefix+'_Width', frm.Width);
+    ini.WriteInteger(Sec, Prefix+'_Height', frm.Height);
+  end;
+
 begin
   ini := TMyIniFile.Create(FConfFile);
   ini.WriteInteger(cStartup, cStartSelection, frmSettings.rgStart.ItemIndex);
@@ -1765,9 +1847,11 @@ begin
   ini.WriteInteger(cAppSec, cWinLeft, frmMain.Left);
   ini.WriteInteger(cAppSec, cWinTop, frmMain.Top);
   ini.WriteInteger(cAppSec, cWinWidth, frmMain.Width);
-
   ini.WriteInteger(cAppSec, cWinHeight, frmMain.Height);
-  ini.WriteInteger(cAppSec, cRightHSplitterPos, RightHSplitter.Top);
+
+  saveFormSize(cAppSec,'shortcutsWinPos',frmShortcuts);
+  saveFormSize(cAppSec,'stepWinPos',frmStep);
+
   ini.WriteString(cAppSec, cSerial, frmconnect.edtDevice.Text);
   ini.WriteBool(cAppSec, cAutoLog, mm_AutoLog.Checked);
   ini.WriteBool(cAppSec, cAutoCsvFileName, mm_AutoCsvFileName.Checked);
@@ -1830,23 +1914,27 @@ begin
     case FPackets[APacket].TestVal of
       tvCurrent:
       begin
-        edtTestVal.EditLabel.Caption := 'Current';
+        edtTestVal.EditLabel.Caption := cCurrent;
+        edtTestVal.EditLabel.Hint := cCurrentHint;
         lblTestUnit.Caption := cA;
       end;
       tvPower:
       begin
-        edtTestVal.EditLabel.Caption := 'Power';
+        edtTestVal.EditLabel.Caption := cPower;
+        edtTestVal.EditLabel.Hint := cPowerHint;
         lblTestUnit.Caption := cP;
       end;
       tvResistance:
       begin
-        edtTestVal.EditLabel.Caption := 'Resistance';
+        edtTestVal.EditLabel.Caption := cResistance;
+        edtTestVal.EditLabel.Hint := cResistanceHint;
         lblTestUnit.Caption := cR;
       end;
     end;
   end else
   begin
     edtTestVal.EditLabel.Caption := cCurrent;
+    edtTestVal.EditLabel.Hint := cCurrentHint;
     lblTestUnit.Caption := cA;
   end;
 end;
@@ -1882,6 +1970,7 @@ var
   err : integer;
 begin
   result := false;
+  StopLogging;
   if mm_AutoLog.Checked then
   begin
     if mm_AutoCsvFileName.Checked then
@@ -1919,6 +2008,8 @@ begin
        exit;
     end;
     setStatusLine(cst_LogFileName,fileName);
+    fLogFileIsOpen := true;
+    fLogFileName := fileName;
     result := true;
   end else
     exit(true);
@@ -1926,10 +2017,17 @@ end;
 
 procedure TfrmMain.StopLogging;
 begin
-  InOutRes := 0;
-  Flush(FLogFile);
-  CloseFile(FLogFile);
-  setStatusLine(cst_LogFileName,'');
+  fLogFileIsOpen := false;
+  if fLogFileIsOpen then
+  begin
+    InOutRes := 0;
+    Flush(FLogFile);
+    CloseFile(FLogFile);
+    if IOResult <> 0 then
+      MessageDlg(cError,Format('Error %d while closing logfile)',[IOResult]), mtError,[mbAbort],0);
+    setStatusLine(cst_LogFileName,'');
+    fLogFileName := '';
+  end;
 end;
 
 function TfrmMain.FindPacket(AName: string): Integer;
@@ -2081,9 +2179,9 @@ begin
           end;
           rmEnd:
           begin
-            LogStep;
+            //LogStep;
+            EBCBreak(true,true);
             FInProgram := False;
-            EBCBreak;
             OffSetting;
             DoUpdate := False;
             DoSend := False;
@@ -2184,6 +2282,7 @@ begin
       tbxMonitor.Enabled := False;
       FConnState := csNone;
       FModel := -1;
+      frmStep.edtDeviceChange(self);
       Serial.Close;
       clearChargeDischargeTypes;
       mm_Connect.Enabled:=true;
@@ -2199,6 +2298,23 @@ begin
     ReconnectTimer.Enabled:= false;
     ConnectionWatchdogTimer.Enabled := false;
     Application.MessageBox(pchar('Could not connect to ' + frmconnect.edtDevice.Text),'Error',MB_ICONSTOP);
+  end;
+end;
+
+procedure TfrmMain.mm_LogFileDirClick(Sender: TObject);
+var
+  sdd : TSelectDirectoryDialog;
+begin
+  sdd := TSelectDirectoryDialog.Create(Self);
+  try
+    sdd.InitialDir := sdLogCSV.InitialDir;
+    if sdd.Execute then
+      if length(sdd.fileName) < 1 then
+        sdLogCSV.initialDir := GetCurrentDir
+      else
+        sdLogCSV.InitialDir := sdd.FileName;
+  finally
+    sdd.free;
   end;
 end;
 
@@ -2275,6 +2391,11 @@ procedure TfrmMain.mm_SettingsClick(Sender: TObject);
 begin
   frmSettings.ShowModal;
   SaveSettings;
+end;
+
+procedure TfrmMain.mm_ShortcutsClick(Sender: TObject);
+begin
+  frmShortcuts.show;
 end;
 
 
@@ -2608,11 +2729,7 @@ begin
     stText[I].Tag := I;
     stText[I].OnClick := @stTextClick;
     stText[I].Parent := gbStatus;
-{$ifdef Windows}
-    stText[I].Font.Name := 'Courier New';
-{$else}
-    stText[I].Font.Name := 'Liberation Mono';
-{$endif}
+    stText[I].Font.Name := cFixedFont;
     stText[I].Font.Size := 12;
     stText[I].Font.Style := [fsBold];
     stText[I].Height := 24;
@@ -2626,7 +2743,7 @@ begin
     begin
       stText[I].Left := cLeft;
       stText[I].BringToFront;
-      stText[I].Width := cRight - cLeft + 2 ;
+      stText[I].Width := cRight - cLeft;// + 2 ;
     end;
   end;
 
@@ -2657,6 +2774,7 @@ begin
   frmStep := TfrmStep.Create(Self);
   frmSettings := TfrmSettings.Create(Self);
   frmConnect := TfrmConnect.Create(Self);
+  frmShortcuts := TfrmShortcuts.Create(Self);
   FAppDir := ExtractFilePath(Application.ExeName);
   FConfFile := ChangeFileExt(Application.ExeName, cConf);
   if not FileExists(FConfFile) then
@@ -2686,8 +2804,16 @@ begin
   FRecvStatusIndicatorInc := -1;
   frmStep.setDevice('');
   {$ifdef windows}
-  MemStepLog.Font.Name := 'Fixedsys';
-  MemLog.Font.Name := 'Fixedsys';
+  MemStepLog.Font.Name := cFixedFont;
+  MemLog.Font.Name := cFixedFont;
+  // AD: for whatever reason all controls in
+  //     gbSettings are shown with some offset
+  //     in Y on Windows (Lazarus 3.0RC2)
+  //     so move them up
+  for i :=0 to gbSettings.ControlCount-1 do
+    if gbSettings.Controls[i] is TControl then
+      with TControl(gbSettings.Controls[i]) do
+        Top := Top - 16;
   {$endif}
 end;
 

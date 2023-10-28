@@ -83,6 +83,9 @@
         </MacroValues>
         <CompilerOptions>
           <Version Value="11"/>
+          <Target>
+            <Filename Value="ebcc"/>
+          </Target>
           <SearchPaths>
             <IncludeFiles Value="$(ProjOutDir)"/>
             <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
@@ -96,6 +99,7 @@
           <Linking>
             <Debugging>
               <GenerateDebugInfo Value="False"/>
+              <RunWithoutDebug Value="True"/>
               <StripSymbols Value="True"/>
             </Debugging>
             <LinkSmart Value="True"/>
@@ -114,7 +118,7 @@
         <CompilerOptions>
           <Version Value="11"/>
           <Target>
-            <Filename Value="ebcc"/>
+            <Filename Value="ebcc.exe"/>
           </Target>
           <SearchPaths>
             <IncludeFiles Value="$(ProjOutDir)"/>
@@ -240,7 +244,7 @@
         <PackageName Value="LCL"/>
       </Item7>
     </RequiredPackages>
-    <Units Count="6">
+    <Units Count="7">
       <Unit0>
         <Filename Value="ebcc.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -282,6 +286,13 @@
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="aboutForm"/>
       </Unit5>
+      <Unit6>
+        <Filename Value="shortcuthelpform.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="frmShortcuts"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+      </Unit6>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

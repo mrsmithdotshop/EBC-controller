@@ -497,6 +497,7 @@ begin
     SynStepHighlighter.KeyWords.Add('WAIT');
     SynStepHighlighter.KeyWords.Add('LOOP');
     SynStepHighlighter.KeyWords.Add('END');
+    Memo1.Clear;
     if (length(edtDevice.Text)<1) then exit;
     fModel := frmMain.GetModelIndex(edtDevice.Text);
     for I := Low(frmMain.FPackets) to High(frmMain.FPackets) - 1 do
