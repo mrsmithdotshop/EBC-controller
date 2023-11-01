@@ -8,6 +8,8 @@ uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, ExtCtrls, StdCtrls,
   EditBtn, JLabeledIntegerEdit;
 
+// never ever change order as it is saved in config file
+
 const
   cAutoLoad = 0;
   cRememberSaveDir = 1;
@@ -16,6 +18,7 @@ const
   cForceMon = 4;
   cLogRecData = 5;
   cIgnoreCRC = 6;
+  cTaskbarCsvPrefix = 7;
 
 type
 

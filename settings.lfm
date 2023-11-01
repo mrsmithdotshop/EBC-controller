@@ -28,7 +28,7 @@ object frmSettings: TfrmSettings
     ChildSizing.Layout = cclLeftToRightThenTopToBottom
     ChildSizing.ControlsPerLine = 1
     ClientHeight = 91
-    ClientWidth = 604
+    ClientWidth = 606
     Items.Strings = (
       'Load last settings'
       'Use default settings'
@@ -66,7 +66,7 @@ object frmSettings: TfrmSettings
     ChildSizing.Layout = cclLeftToRightThenTopToBottom
     ChildSizing.ControlsPerLine = 1
     ClientHeight = 220
-    ClientWidth = 604
+    ClientWidth = 606
     Items.Strings = (
       '&Autoload program file'
       '&Remember save directory'
@@ -75,15 +75,16 @@ object frmSettings: TfrmSettings
       '&Force monitor mode after cycle end'
       '&Log received data to console'
       '&Ignore CRC'
+      'use taskbar name as csv file name &prefix'
     )
     OnClick = cgSettingsClick
     OnItemClick = cgSettingsItemClick
     TabOrder = 2
     Data = {
-      0700000002020202020202
+      080000000202020202020202
     }
     object edtProgFile: TFileNameEdit
-      Left = 178
+      Left = 180
       Height = 28
       Top = 9
       Width = 420
@@ -106,17 +107,17 @@ object frmSettings: TfrmSettings
     Anchors = [akTop, akLeft, akRight]
     Caption = 'Parameters'
     ClientHeight = 70
-    ClientWidth = 604
+    ClientWidth = 606
     TabOrder = 1
     object edtIntTime: TJLabeledIntegerEdit
       Left = 13
-      Height = 23
+      Height = 36
       Top = 30
       Width = 114
       DisplayFormat = '0'
       Value = 60
       NegativeColor = clDefault
-      EditLabel.Height = 15
+      EditLabel.Height = 19
       EditLabel.Width = 114
       EditLabel.Caption = '&dVdA Int. time (s)'
       EditLabel.ParentColor = False

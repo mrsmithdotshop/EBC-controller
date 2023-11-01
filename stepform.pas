@@ -123,6 +123,23 @@ var
   FSteps: array of TSteps;
   frmStep: TfrmStep;
 
+Resourcestring
+  cCommandExpected             = 'Command expected';
+  cUnexpectedParamCharge       = 'unexpected parameter for charge';
+  cChargeVoltageNotSpecified   = 'Charge voltage not specified in script nor in conf file (volt=)';
+  cCutoffCurrNotSpecified      = 'Cutoff current not specified (cuta=)';
+  cChargeCurrNotSpecified      = 'Charge current not specified (curr=)';
+  cUnexpectedParDischarge      = 'unexpected parameter for discharge (%s)';
+  cUnexpectedParDischargeCP    = 'unexpected parameter for discharge current power (%s)';
+  cUnexpectedParDischargeCR    = 'unexpected parameter for discharge current resistance(%s)';
+  cLoopValueAlreadySpecified   = 'Loop value already specified';
+  cUnexpectedParLoop           = 'unexpected parameter for loop';
+  cUnexpectedCommand           = 'unexpected command';
+  cErrorInScriptFile           = 'Error in script file';
+  cLineColMessage              = '(Line %d, Column %d): %s';
+  cDescNote                    = 'Note: A20 and A40 requires charging voltage (chargers have no presets like A5 and A10), may be set via ini file e.g. for LiPo';
+  cMinutes                     = 'minutes';
+
 implementation
 
 {$R *.lfm}
@@ -270,9 +287,9 @@ begin
             FSteps[N].PacketIndex := Tk;
             if tk < c_fixedBase then  // command from conf file
             begin
-              If tk > high(frmMain.FPackets) then pa.raiseException ('Command expected');
+              If tk > high(frmMain.FPackets) then pa.raiseException (cCommandExpected);
               case frmMain.FPackets[tk].Method of
-                mNone      : pa.raiseException ('Command expected');
+                mNone      : pa.raiseException (cCommandExpected);
                 mCharge    : begin
                   pm := pa.expectParamOrEOL;
                   while(pm>=0) do
@@ -286,7 +303,7 @@ begin
                       id_p_cutat  : FSteps[N].CutAmpTime := trunc(pa.tkValue);
                       id_p_cuta   : FSteps[N].CutAmp := pa.tkValue;
                       id_p_volt   : FSteps[N].CV := pa.tkValue;
-                    otherwise pa.raiseException ('unexpected parameter for charge');
+                    otherwise pa.raiseException (cUnexpectedParamCharge);
                     end;
                     pm := pa.expectParamOrEOL;
                   end;
@@ -308,16 +325,16 @@ begin
                       id_p_cutat  : FSteps[N].CutAmpTime := trunc(pa.tkValue);
                       id_p_cuta   : FSteps[N].CutAmp := pa.tkValue;
                       id_p_volt   : FSteps[N].CV := pa.tkValue;
-                    otherwise pa.raiseException ('unexpected parameter for charge');
+                    otherwise pa.raiseException (cUnexpectedParamCharge);
                     end;
                     pm := pa.expectParamOrEOL;
                   end;
                   if FSteps[N].CV < 0.01 then
-                    pa.raiseException ('Charge voltage not specified in script nor in conf file (volt=)');
+                    pa.raiseException (cChargeVoltageNotSpecified);
                   if FSteps[N].CutAmp < 0.01 then
-                    pa.raiseException ('Cutoff current not specified (cuta=)');
+                    pa.raiseException (cCutoffCurrNotSpecified);
                   if FSteps[N].TestVal < 0.01 then
-                    pa.raiseException ('Charge current not specified (curr=)');
+                    pa.raiseException (cChargeCurrNotSpecified);
                   inc(n);
                 end;
                 mDischarge: begin
@@ -331,7 +348,7 @@ begin
                       id_p_time   : FSteps[N].CutTime := trunc(pa.tkValue);
                       id_p_cutv   : FSteps[N].CutVolt := pa.tkValue;
                       id_p_curr	: FSteps[N].TestVal := pa.tkValue;
-                    otherwise pa.raiseException (format('unexpected parameter for discharge (%s)',[pa.getTokenText]));
+                    otherwise pa.raiseException (format(cUnexpectedParDischarge,[pa.getTokenText]));
                     end;
                     pm := pa.expectParamOrEOL;
                   end;
@@ -348,7 +365,7 @@ begin
                       id_p_time   : FSteps[N].CutTime := trunc(pa.tkValue);
                       id_p_cutv   : FSteps[N].CutVolt := pa.tkValue;
                       id_p_power  : FSteps[N].TestVal := pa.tkValue;
-                    otherwise pa.raiseException (format('unexpected parameter for discharge current power (%s)',[pa.getTokenText]));
+                    otherwise pa.raiseException (format(cUnexpectedParDischargeCP,[pa.getTokenText]));
                     end;
                     pm := pa.expectParamOrEOL;
                   end;
@@ -365,7 +382,7 @@ begin
                       id_p_time   : FSteps[N].CutTime := trunc(pa.tkValue);
                       id_p_cutv   : FSteps[N].CutVolt := pa.tkValue;
                       id_p_res    : FSteps[N].TestVal := pa.tkValue;
-                    otherwise pa.raiseException (format('unexpected parameter for discharge current resistance(%s)',[pa.getTokenText]));
+                    otherwise pa.raiseException (format(cUnexpectedParDischargeCR,[pa.getTokenText]));
                     end;
                     pm := pa.expectParamOrEOL;
                   end;
@@ -394,11 +411,11 @@ begin
                     id_p_capi   : FSteps[N].capi := true;
                     id_p_enei   : FSteps[N].enei := true;
                     id_p_value  : begin
-                                    if duplicateValue then pa.raiseException('Loop value already specified');
+                                    if duplicateValue then pa.raiseException(cLoopValueAlreadySpecified);
                                     FSteps[N].Loop := trunc(pa.tkValue);
                                     duplicateValue := true;
                                   end;
-                    otherwise pa.raiseException ('unexpected parameter for loop');
+                    otherwise pa.raiseException (cUnexpectedParLoop);
                   end;
                   pm := pa.expectParamOrValueOrEOL;
                 end;
@@ -413,7 +430,7 @@ begin
             end;
           end else
             if tk <> TK_EOL then
-              pa.raiseException ('unexpected command');
+              pa.raiseException (cUnexpectedCommand);
          end;
       end;
       FCompiled := True;
@@ -423,7 +440,7 @@ begin
       on e:TLineParserException do
       begin
         if showAbort then Buttons := [mbOk, mbAbort] else Buttons := [mbOk];
-        Result := MessageDlg ('Error in script file', format('(Line %d, Column %d): %s',[e.LineNo, e.LinePos,e.Message]), mtError, Buttons,0);
+        Result := MessageDlg (cErrorInScriptFile, format(cLineColMessage,[e.LineNo, e.LinePos,e.Message]), mtError, Buttons,0);
         memStep.CaretX:=e.LinePos;
         memStep.CaretY:=e.LineNo;
       end;
@@ -556,12 +573,12 @@ Note: A20 and A40 requires charging voltage (chargers have no presets like A5 an
         Memo1.Lines.Add (HelpText);
      end;
 
-     Memo1.Lines.Add('Wait:      Wait t (minutes)');
+     Memo1.Lines.Add('Wait:      Wait t ('+cMinutes+')');
      Memo1.Lines.Add('Loop:      Loop [CapI|EneI] n - run steps n more times. CapI/EneI - run as long dis. capacity increases');
-     Memo1.Lines.Add('Cutoffs:   [c/d] CutA=current(A) CutC=capacity(Ah) Energy=energy(Wh) Time=(minutes) CutAt=(minutes)');
+     Memo1.Lines.Add('Cutoffs:   [c/d] CutA=current(A) CutC=capacity(Ah) Energy=energy(Wh) Time=(minutes) CutAt=('+cMinutes+')');
      Memo1.Lines.Add('Examples:  c_'+c[0]+' Cells=4 Curr=0.75 CutA=0.2 Time=180');
      Memo1.Lines.Add('           d_CR Res=10 CutV=2.8 Energy=6 Time=360');
-     Memo1.Lines.Add('Note: A20 and A40 requires charging voltage (chargers have no presets like A5 and A10), may be set via ini file e.g. for LiPo');
+     Memo1.Lines.Add(cDescNote);
 
   finally
     c.free; d.free;

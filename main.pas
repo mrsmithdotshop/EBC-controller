@@ -18,7 +18,7 @@ const
 {$else}
   cFixedFont = 'Liberation Mono';
 {$endif}
-  cVersion = 'EBC Controller v2.16';
+  cVersion = 'EBC Controller v2.17';
 
   cConnectRetries = 10;
 
@@ -49,9 +49,7 @@ const
   cPower = 'Power';
   cResistance = 'Resistance';
 
-  cCurrentHint= 'Set the charge/discharge current in Ampere';
-  cPowerHint  = 'Set the charge/discharge Power in Watt';
-  cResistanceHint = 'Set the charge/discharge current resistance in Ohm';
+  cDefaultCaption = 'EBC Controller';
 
   cConnecting = 'Connecting...';
   cNotConnected = 'Not connected';
@@ -105,11 +103,6 @@ const
   cMaxTime = 'MaxTime';
   cIntTime = 'IntegrationTime';
 
-  cView = 'View...';
-  cEdit = 'Edit...';
-
-  cCapI = 'CapI: ';
-  cEneI = 'EneI: ';
 
   cStartup = 'Startup';
   cUseLast = 'UseLast';
@@ -145,15 +138,57 @@ const
   cWinTop    = 'Top';
   cWinLeft   = 'Left';
   cAppSec = 'Application';
+  cMemStepLogHeight = 'MemStepLogHeight';
 {$ifdef Windows}
   cSerial = 'Serial-Win';
 {$else}
   cSerial = 'Serial';
 {$endif}
 
-  cFatal = 'Fatal Error';
-  cError = 'Error';
+Resourcestring
+  cFileExists              = 'File Exists';
+  cFatal                   = 'Fatal Error';
+  cError                   = 'Error';
+  cCurrentHint             = 'Set the charge/discharge current in Ampere';
+  cPowerHint               = 'Set the charge/discharge Power in Watt';
+  cResistanceHint          = 'Set the charge/discharge current resistance in Ohm';
+  cConnectTimeout          = 'Unable to connect - timeout';
+  cChargeLowerCutoff       = 'Charge current (%fA) is lower than cutoff current (%fA)';
+  cCutoffGtoeChargeC       = 'Cutoff current (%fA) is greater or equal to charage current (%fA)';
+  cChargeCurrExeeded       = 'Charge current (%fA) exceeds the maximum supported by %s (%fA)';
+  cChargeVoltageExeeded    = 'Charge voltage (%fV) exceeds the maximum supported by %s (%fV)';
+  cNoChargeProfileSelected = 'no charging profile selected';
+  cDischargeAmpsExeeded    = 'Discharge current (%fA) exceeds the maximum supported by %s (%fA)';
+  cPacketNotInConfFile     = 'packet "%S" not found in config file';
+  cErrorReadingModelFromSec= '%s while reading Model= from %s (Section %d)';
+  cNoChargeDischargeProfile= 'No charge/discharge profiles defined in configuration file (%s)';
+  cIdentModelNotFound      = 'Ident for model %d not found in %s';
+  cNoModelsDefined         = 'No models defined in configuration file (%s)';
+  cNoConnectPackage        = 'There is no connect packet defined in configuration file (%s)';
+  cNoDisconnectPackage     = 'There is no disconnect packet defined in configuration file (%s)';
+  cStepLogCreateErr        = 'unable to create step logfile %s (%d)';
+  cAutoLogNoAutoFileName   = 'AutoLog is defined but neither a log file name nor Auto CSV Filename is specified';
+  cFileOverwrite           = 'file %s already exists'+#13+'Overwrite File ?';
+  cUnableToCreateLogFile   = 'unable to create logfile %s (%d)';
+  cErrorClosingLogfile     = 'Error %d while closing logfile)';
+  cUnableToConnectTo       = 'Unable not connect to';
+  cConnectionLost          = 'Connection Lost';
+  cPacketTimeout           = 'Timout waiting for a packet from charger device';
+  cSetBorderName           = 'Set border name';
+  cView                    = 'View...';
+  cEdit                    = 'Edit...';
+  cCapI                    = 'CapI: ';
+  cEneI                    = 'EneI: ';
+  cInvalidChecksum         = '<%s invalid checksum';
+  cDecodeCorrentException  = 'DecodeCurrent raised %s (%2x%2x)';
+  cDecodeVoltageException  = 'DecodeVoltage raised %s (%2x%2x)';
+  cTime                    = 'Time';
+  cStarted                 = 'started';
+  cUnknown                 = 'unknown';
 
+
+
+Const
   cst_ConnectionState = 0;
   cst_ConnectionStatus = 1;
   cst_ConnectedModel = 2;
@@ -337,6 +372,7 @@ type
     sdCSV: TSaveDialog;
     shaCapI: TShape;
     MainStatusBar: TStatusBar;
+    ChartStepSplitter: TSplitter;
     stStepFile: TStaticText;
     ReconnectTimer: TTimer;
     ConnectionWatchdogTimer: TTimer;
@@ -648,7 +684,7 @@ end;
 
 procedure TfrmMain.fatalError(aMessage : string);
 begin
-  Application.MessageBox(pchar(aMessage),cFatal,MB_ICONSTOP);
+  Application.MessageBox(pchar(aMessage),pchar(cFatal),MB_ICONSTOP);
   Application.Terminate;
 end;
 
@@ -693,7 +729,7 @@ begin
       Inc(N, Length(s));
     end;
   until (N >= 19) or (MillisecondsBetween(Now, E) > 200);
-  DumpSerialData('<',format('len:%d ',[N]), rBuf, 0);
+  DumpSerialData('<','', rBuf, 0);
   while N >= 19 do
   begin
     s := copy(r,1,19); delete(r,1,19); dec(N,19);
@@ -728,7 +764,7 @@ begin
         end;
       end
       else
-        doLog(Format('<%s invalid checksum',[r]));
+        doLog(Format(cInvalidChecksum,[r]));
     end;
   end;
   FLastTime := E;
@@ -771,13 +807,13 @@ begin
       FLastI := DecodeCurrent(Copy(APacket, 3, 2));
     except
       on e:exception do  // was for divide by zero check, only visible under windows, fixed
-        doLog(format('DecodeCurrent raised %s (%2x%2x)',[e.Message,byte(APacket[3]), byte(APacket[4])]));
+        doLog(format(cDecodeCorrentException,[e.Message,byte(APacket[3]), byte(APacket[4])]));
     end;
     try
       FLastU := DecodeVoltage(Copy(APacket, 5, 2));
     except
       on e:exception do
-        doLog(format('DecodeVoltage raised %s (%2x%2x)',[e.Message,byte(APacket[5]), byte(APacket[6])]));
+        doLog(format(cDecodeVoltageException,[e.Message,byte(APacket[5]), byte(APacket[6])]));
     end;
 
     FCurrentCapacity[caEBC] := DecodeCharge(Copy(APacket, 7, 2));
@@ -891,14 +927,14 @@ begin
       begin
         if FChecks.TimerRunning then
         begin
-          DoLog('Time: ' + IntToStr(SecondsBetween(FChecks.ThresholdTime, Now)));
+          DoLog(cTime+': ' + IntToStr(SecondsBetween(FChecks.ThresholdTime, Now)));
           if SecondsBetween(FChecks.ThresholdTime, Now) div 60 >= FChecks.cDwellTime then
             if FInProgram then EBCBreak(false,false) else EBCBreak;
         end else
         begin
           FChecks.ThresholdTime := Now;
           FChecks.TimerRunning := True;
-          DoLog('Timer started.');
+          DoLog('Timer '+cStarted+'.');
           if FChecks.cDwellTime = 0 then
             if FInProgram then EBCBreak(false,false) else EBCBreak;
         end;
@@ -908,7 +944,7 @@ begin
     end;
   end else
   begin
-    DumpSerialData('<','CRC err:', APacket, crcrecvpos);
+    DumpSerialData('<','CRC '+cError+':', APacket, crcrecvpos);
   end;
 end;
 
@@ -1131,7 +1167,7 @@ var
          result := i;
          exit;
        end;
-     Application.MessageBox(pchar(format('packet "%S" not found in config file',[command])),'Error in config file',MB_ICONSTOP);
+     Application.MessageBox(pchar(format(cPacketNotInConfFile,[command])),pchar(cError),MB_ICONSTOP);
      result := -1;
   end;
 
@@ -1172,7 +1208,7 @@ begin
           ini.ReadIntegers(Sec, cModels, SupportedModels);
         except
           on e:exception do
-            Application.MessageBox(pchar(Format('%s while reading Model= from %s (Section %d)',[e.Message,FConfFile,P])),'Error',MB_ICONSTOP);
+            Application.MessageBox(pchar(Format(cErrorReadingModelFromSec,[e.Message,FConfFile,P])),pchar(cError),MB_ICONSTOP);
         end;
         s := ini.ReadString(Sec, cTestVal, 'I');
         if s = 'P' then
@@ -1208,7 +1244,7 @@ begin
 
   if Length(FPackets) < 1 then
   begin
-    fatalError(format('No charge/discharge profiles defined in configuration file (%s)',[FConfFile]));
+    fatalError(format(cNoChargeDischargeProfile,[FConfFile]));
     exit;
   end;
   // read models
@@ -1231,7 +1267,7 @@ begin
         Ident := ini.ReadInteger(s, cIdent, -1);
         if (Ident < 0) then
         begin
-          fatalError(format('Ident for model %d nount found in %s',[Length(FModels),FConfFile]));
+          fatalError(format(cIdentModelNotFound,[Length(FModels),FConfFile]));
           Exit;
         end;
         IFactor := ini.ReadFloat(s, cIFactor, 1);
@@ -1252,23 +1288,23 @@ begin
   until N > 10;
   if length(FModels) < 1 then
   begin
-    fatalError(format('No models defined in configuration file (%s)',[FConfFile]));
+    fatalError(format(cNoModelsDefined,[FConfFile]));
     exit;
   end;
   SetLength(FModels, Length(FModels) + 1);
   FModels[High(FModels)] := FModels[0];
-  FModels[High(FModels)].Name := 'Unknown';
+  FModels[High(FModels)].Name := cUnknown;
 
   FConn.Connect := GetHexPacketFromIni(ini, cConn, cConnect);
   if length(FConn.Connect) < 1 then
   begin
-    fatalError(format('There is no connect packet defined in configuration file (%s)',[FConfFile]));
+    fatalError(format(cNoConnectPackage,[FConfFile]));
     exit;
   end;
   FConn.Disconnect := GetHexPacketFromIni(ini, cConn, cDisconnect);
   if length(FConn.Disconnect) < 1 then
   begin
-    fatalError(format('There is no disconnect packet defined in configuration file (%s)',[FConfFile]));
+    fatalError(format(cNoDisconnectPackage,[FConfFile]));
     exit;
   end;
   FConn.Stop := GetHexPacketFromIni(ini, cConn, cStop);
@@ -1445,7 +1481,7 @@ begin
               writeln(sl,memStepLog.Lines[i]);
             system.close(sl);
           end else
-            MessageDlg(cError,Format('unable to create step logfile %s (%d)',[fn,IOResult]), mtError,[mbAbort],0);
+            MessageDlg(cError,Format(cStepLogCreateErr,[fn,IOResult]), mtError,[mbAbort],0);
         end;
       end;
       beep;
@@ -1474,7 +1510,7 @@ begin
   end;
   if Result = -1 then
   begin
-    FModels[High(FModels)].Name := IntToStr(AModel) + ' unknown';  // AD: is decimal in conf so report it as in conf
+    FModels[High(FModels)].Name := IntToStr(AModel) + ' ' + cUnknown;  // AD: is decimal in conf so report it as in conf
     Result := High(FModels);
   end;
 end;
@@ -1788,6 +1824,8 @@ begin
   if ini.ReadBool(cAppSec, cWinMaximized, False) then
     frmMain.WindowState := wsMaximized;
 
+  memStepLog.Height := ini.ReadInteger(cAppSec, cMemStepLogHeight, MemStepLog.Height);
+
   loadFormSize(cAppSec,'shortcutsWinPos',frmShortcuts);
   loadFormSize(cAppSec,'stepWinPos',frmStep);
 {$ifdef Windows}
@@ -1848,6 +1886,8 @@ begin
   ini.WriteInteger(cAppSec, cWinTop, frmMain.Top);
   ini.WriteInteger(cAppSec, cWinWidth, frmMain.Width);
   ini.WriteInteger(cAppSec, cWinHeight, frmMain.Height);
+
+  ini.WriteInteger(cAppSec, cMemStepLogHeight, MemStepLog.Height);
 
   saveFormSize(cAppSec,'shortcutsWinPos',frmShortcuts);
   saveFormSize(cAppSec,'stepWinPos',frmStep);
@@ -1967,16 +2007,35 @@ end;
 function TfrmMain.StartLogging : boolean;
 var
   fileName,fileDir : string;
-  err : integer;
+  err,i : integer;
+  prefix : string;
 begin
   result := false;
   StopLogging;
+  prefix := '';
   if mm_AutoLog.Checked then
   begin
     if mm_AutoCsvFileName.Checked then
     begin
       // build a file name
       fileName := FormatDateTime('YYYYMMDD_HHMMSS',Now)+'.csv';
+
+      // prefix taksbar name if enabled in settings
+      if frmSettings.cgSettings.Checked[cTaskbarCsvPrefix] then
+        if Caption <> cDefaultCaption then
+        begin
+          prefix := Caption;
+          if length(prefix)>0 then
+          begin
+            for i := 1 to length(prefix) do
+            begin
+              if prefix[i] <= '0' then prefix[i] := '_';
+              if prefix[i] in ['\','/'] then prefix[i] := '_';
+            end;
+            prefix := prefix + '_';
+          end;
+        end;
+
       fileDir := sdLogCSV.InitialDir;
       if Length(fileDir) > 0 then
       begin
@@ -1989,12 +2048,14 @@ begin
 
     if length(fileName) < 1 then
     begin
-      Application.MessageBox('AutoLog is defined but neither a log file name nor Auto CSV Filename is specified',cError,MB_ICONSTOP);
+      Application.MessageBox(pchar(cAutoLogNoAutoFileName),pchar(cError),MB_ICONSTOP);
       exit;
     end;
 
+    fileName := prefix + fileName;
+
     if FileExists(fileName) then
-      if MessageDlg('File Exists',format('file %s already exists'+#13+'Overwrite File ?',[fileName]), mtConfirmation,[mbYes, mbNo],0) <> mrYes then
+      if MessageDlg(cFileExists,format(cFileOverwrite,[fileName]), mtConfirmation,[mbYes, mbNo],0) <> mrYes then
         exit;
 
     // open log file
@@ -2004,7 +2065,7 @@ begin
     err := ioresult;
     if (err <> 0) then
     begin
-       MessageDlg(cError,Format('unable to create logfile %s (%d)',[fileName,err]), mtError,[mbAbort],0);
+       MessageDlg(cError,Format(cUnableToCreateLogFile,[fileName,err]), mtError,[mbAbort],0);
        exit;
     end;
     setStatusLine(cst_LogFileName,fileName);
@@ -2024,7 +2085,7 @@ begin
     Flush(FLogFile);
     CloseFile(FLogFile);
     if IOResult <> 0 then
-      MessageDlg(cError,Format('Error %d while closing logfile)',[IOResult]), mtError,[mbAbort],0);
+      MessageDlg(cError,Format(cErrorClosingLogfile,[IOResult]), mtError,[mbAbort],0);
     setStatusLine(cst_LogFileName,'');
     fLogFileName := '';
   end;
@@ -2244,7 +2305,7 @@ begin
   end else
   begin
     mm_ConnectClick(Sender);
-    Application.MessageBox('Unable to connect - timeout',cError,MB_ICONSTOP);
+    Application.MessageBox(pchar(cConnectTimeout),pchar(cError),MB_ICONSTOP);
   end;
 end;
 
@@ -2297,7 +2358,7 @@ begin
     setStatusLine(cst_ConnectedModel,'');
     ReconnectTimer.Enabled:= false;
     ConnectionWatchdogTimer.Enabled := false;
-    Application.MessageBox(pchar('Could not connect to ' + frmconnect.edtDevice.Text),'Error',MB_ICONSTOP);
+    Application.MessageBox(pchar(cUnableToConnectTo + ' ' + frmconnect.edtDevice.Text),pchar(cError),MB_ICONSTOP);
   end;
 end;
 
@@ -2339,7 +2400,7 @@ begin
   ConnectionWatchdogTimer.Enabled := false;
   if fConnState = csConnected then
      mm_ConnectClick(Sender);
-  MessageDlg('Connection Lost','Timout waiting for a packed from charger device', mtError,[mbOk],0);
+  MessageDlg(cConnectionLost,cPacketTimeout, mtError,[mbOk],0);
 end;
 
 procedure TfrmMain.mm_AutoCsvFileNameClick(Sender: TObject);
@@ -2422,7 +2483,7 @@ procedure TfrmMain.mm_taskBarNameClick(Sender: TObject);
 var s : string;
 begin
   s := '';
-  if InputQuery('Set border name', 'Name', s) then
+  if InputQuery(cSetBorderName, cName, s) then
     frmMain.Caption := s;
 end;
 
@@ -2478,7 +2539,7 @@ begin
     if FSteps[i].Mode = rmCharging then
       if FSteps[i].CutAmp >= FSteps[i].TestVal then
       begin
-        Application.MessageBox(pchar(format('Charge current (%fA) is lower than cutoff current (%fA)',[FSteps[i].TestVal,FSteps[i].CutAmp])),cFatal,MB_ICONSTOP);
+        Application.MessageBox(pchar(format(cChargeLowerCutoff,[FSteps[i].TestVal,FSteps[i].CutAmp])),pchar(cFatal),MB_ICONSTOP);
         exit (false);
       end;
   end;
@@ -2493,7 +2554,7 @@ begin
   begin
     if edtCutA.Value >= edtTestVal.Value then
     begin
-      Application.MessageBox(pchar(Format('Cutoff current (%fA) is greater or equal to charage current (%fA)',[edtCutA.Value,edtTestVal.Value])),cError,MB_ICONSTOP);
+      Application.MessageBox(pchar(Format(cCutoffGtoeChargeC,[edtCutA.Value,edtTestVal.Value])),pchar(cError),MB_ICONSTOP);
       exit;
     end;
 
@@ -2509,18 +2570,18 @@ begin
         if FModels[FModel].MaxChargeCurrent > 0 then
           if FModels[FModel].MaxChargeCurrent < edtTestVal.Value then
           Begin
-            Application.MessageBox(pchar(Format('Charge current (%fA) exceeds the maximum supported by %s (%fA)',[edtTestVal.Value,FModels[FModel].Name,FModels[FModel].MaxChargeCurrent])),cError,MB_ICONSTOP);
+            Application.MessageBox(pchar(Format(cChargeCurrExeeded,[edtTestVal.Value,FModels[FModel].Name,FModels[FModel].MaxChargeCurrent])),pchar(cError),MB_ICONSTOP);
             exit;
           end;
         if FModels[FModel].MaxChargeVoltage > 0 then
           if FModels[FModel].MaxChargeVoltage < edtChargeV.Value then
           Begin
-            Application.MessageBox(pchar(Format('Charge voltage (%fV) exceeds the maximum supported by %s (%fV)',[edtChargeV.Value,FModels[FModel].Name,FModels[FModel].MaxChargeVoltage])),cError,MB_ICONSTOP);
+            Application.MessageBox(pchar(Format(cChargeVoltageExeeded,[edtChargeV.Value,FModels[FModel].Name,FModels[FModel].MaxChargeVoltage])),pchar(cError),MB_ICONSTOP);
             exit;
           end;
       end else
       begin
-        Application.MessageBox('no charging profile selected',cError,MB_ICONSTOP);
+        Application.MessageBox(pchar(cNoChargeProfileSelected),pchar(cError),MB_ICONSTOP);
         exit;
       end;
       if not StartLogging then exit;
@@ -2534,7 +2595,7 @@ begin
       if FModels[FModel].MaxDischargeCurrent > 0 then
         if FModels[FModel].MaxDischargeCurrent < edtTestVal.Value then
         Begin
-          Application.MessageBox(pchar(Format('Discharge current (%fA) exceeds the maximum supported by %s (%fA)',[edtTestVal.Value,FModels[FModel].Name,FModels[FModel].MaxDischargeCurrent])),cError,MB_ICONSTOP);
+          Application.MessageBox(pchar(Format(cDischargeAmpsExeeded,[edtTestVal.Value,FModels[FModel].Name,FModels[FModel].MaxDischargeCurrent])),pchar(cError),MB_ICONSTOP);
           exit;
         end;
     end;
@@ -2711,6 +2772,7 @@ begin
   FShowCoulomb := False;
   FDelta[0].Time := Now;
   FDelta[1].Time := Now;
+  Caption := cDefaultCaption;
 
   // for Windows as async do not exist for Windows
   Serial:= TLazSerial.Create(Self);
