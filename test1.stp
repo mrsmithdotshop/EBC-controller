@@ -1,0 +1,5 @@
+// Example
+c_lipo cells=1 cuta=0.3A cap=0.05 time=1m
+wait 1m
+d_cc curr=3A cutv=4V time=5m
+loop 3

@@ -6,7 +6,11 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, StdCtrls, ComboEx,
-  ExtCtrls, lazserial, lcltype;
+  ExtCtrls, lazserial, lcltype
+  {$ifdef windows}
+  ,windows,registry
+  {$endif}
+  ;
 
 type
 
@@ -38,9 +42,39 @@ implementation
 procedure TfrmConnect.EnumDevices;
 {$ifdef Windows}
 var i : integer;
+    hkCurrent: HKEY = 0;
+    dwMaxValueNameLen : dword;
+    enumContinue: boolean = true;
+    index : dword = 0;
+    nameBuf : pchar = NIL;
+    dwValueNameSize : dword = 0;
+    device : string;
+    res : dword;
+    valueSize : longint = 0;
+
+    reg : TRegistry;
+    valueNames : TUnicodeStringArray;
+    valueName,value : UnicodeString;
+    Info:    TRegKeyInfo;
 begin
-  for i := 1 to 49 do
-    edtDevice.items.Add('COM%d',[i]);
+  edtDevice.items.Clear;
+  reg := TRegistry.Create;
+  try
+    reg.RootKey := HKEY_LOCAL_MACHINE;
+    if not reg.openKeyReadOnly('HARDWARE\DEVICEMAP\SERIALCOMM') then exit;
+    reg.GetKeyInfo(Info);
+
+    valueNames := reg.GetValueNames;
+    if valueNames <> NIL then
+      for valueName in valueNames do
+      begin
+        value := reg.ReadString(valueName);
+        edtDevice.items.add(value);
+      end;
+  finally
+    reg.free;
+  end;
+
 end;
 {$else}
 const DevicePath = '/dev';

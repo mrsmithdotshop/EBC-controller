@@ -1,7 +1,7 @@
 object frmStep: TfrmStep
   Left = 327
   Height = 557
-  Top = 174
+  Top = 207
   Width = 994
   BorderIcons = [biSystemMenu]
   Caption = 'Unsaved'
@@ -555,22 +555,22 @@ object frmStep: TfrmStep
     TabOrder = 3
     object edtDevice: TComboBox
       Left = 80
-      Height = 35
+      Height = 23
       Top = 3
       Width = 128
       AutoComplete = True
       AutoCompleteText = [cbactEnabled, cbactEndOfLineComplete, cbactSearchAscending]
       AutoDropDown = True
-      ItemHeight = 0
+      ItemHeight = 15
       Style = csDropDownList
       TabOrder = 0
       OnChange = edtDeviceChange
     end
     object edtDeviceLabel: TLabel
       Left = 25
-      Height = 19
+      Height = 15
       Top = 10
-      Width = 48
+      Width = 38
       Caption = 'Devic&e:'
       FocusControl = edtDevice
       ParentColor = False

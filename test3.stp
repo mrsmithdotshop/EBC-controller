@@ -1,0 +1,5 @@
+// 18650 for testing
+c_lipo cells=1 curr=1.0 cuta=0.4A time=1m Volt=4.2
+wait 1m
+d_cc curr=1A cutv=3.8V time=1m
+loop 3
