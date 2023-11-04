@@ -13,8 +13,8 @@ object frmMain: TfrmMain
   LCLVersion = '3.0.0.2'
   object MainStatusBar: TStatusBar
     Left = 0
-    Height = 23
-    Top = 710
+    Height = 21
+    Top = 712
     Width = 1449
     Panels = <    
       item
@@ -40,18 +40,18 @@ object frmMain: TfrmMain
     AnchorSideRight.Control = RightPanel
     AnchorSideBottom.Control = MainStatusBar
     Left = 8
-    Height = 710
+    Height = 712
     Top = 0
     Width = 1141
     Anchors = [akTop, akLeft, akRight, akBottom]
-    ClientHeight = 710
+    ClientHeight = 712
     ClientWidth = 1141
     Font.Height = -13
     ParentFont = False
     TabOrder = 2
     object Chart: TChart
       Left = 1
-      Height = 573
+      Height = 462
       Top = 1
       Width = 1139
       AxisList = <      
@@ -140,35 +140,68 @@ object frmMain: TfrmMain
         LinePen.Color = clWhite
       end
     end
-    object memStepLog: TMemo
-      AnchorSideTop.Side = asrBottom
+    object memStepLog: TStringGrid
       Left = 1
-      Height = 125
-      Top = 584
+      Height = 238
+      Top = 463
       Width = 1139
       Align = alBottom
-      Anchors = [akBottom]
-      Constraints.MinHeight = 20
-      Font.Height = -14
-      Font.Name = 'Liberation Mono'
-      Lines.Strings = (
-        ' Step    CMD        (Ah)     (Wh)        Time  StartV  EndV'
-        '111:111|C_NiMH   |999.999|999.999|DDD:HH:MM:SS|12.000|16.000'
-        '111:112|WAIT 9999|       |       |            |16.000|15.000'
-        '111:113|LOOP 9998|       |       |            |      |'
-        '111:111|C_NiMH   |999.999|999.999|DDD:HH:MM:SS|12.000|16.000'
-        '111:112|WAIT 9999|       |       |            |16.000|15.000'
-        '111:113|LOOP 9998|       |       |            |      |'
-      )
-      ParentFont = False
-      ScrollBars = ssVertical
-      TabOrder = 1
+      ColCount = 8
+      Columns = <      
+        item
+          Title.Caption = 'Step'
+          Width = 50
+        end      
+        item
+          Title.Caption = 'cmd'
+          Width = 140
+        end      
+        item
+          Alignment = taRightJustify
+          Title.Alignment = taRightJustify
+          Title.Caption = 'AH'
+          Width = 80
+        end      
+        item
+          Alignment = taRightJustify
+          Title.Alignment = taRightJustify
+          Title.Caption = 'WH'
+          Width = 128
+        end      
+        item
+          Alignment = taRightJustify
+          Title.Alignment = taRightJustify
+          Title.Caption = 'Time'
+          Width = 128
+        end      
+        item
+          Alignment = taRightJustify
+          Title.Alignment = taRightJustify
+          Title.Caption = 'Start voltage'
+          Width = 100
+        end      
+        item
+          Alignment = taRightJustify
+          Title.Alignment = taRightJustify
+          Title.Caption = 'End voltage'
+          Width = 100
+        end      
+        item
+          Alignment = taRightJustify
+          Title.Alignment = taRightJustify
+          Title.Caption = 'End current'
+          Width = 100
+        end>
+      FixedCols = 0
+      Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goColSizing, goRowSelect, goSmoothScroll]
+      RowCount = 2
+      TabOrder = 0
     end
     object ChartStepSplitter: TSplitter
       Cursor = crVSplit
       Left = 1
       Height = 10
-      Top = 574
+      Top = 701
       Width = 1139
       Align = alBottom
       ResizeAnchor = akBottom
@@ -182,11 +215,11 @@ object frmMain: TfrmMain
     AnchorSideRight.Side = asrBottom
     AnchorSideBottom.Control = MainStatusBar
     Left = 1149
-    Height = 710
+    Height = 712
     Top = 0
     Width = 300
     Anchors = [akTop, akRight, akBottom]
-    ClientHeight = 710
+    ClientHeight = 712
     ClientWidth = 300
     TabOrder = 1
     object gbStatus: TGroupBox
@@ -208,7 +241,7 @@ object frmMain: TfrmMain
       AnchorSideRight.Side = asrBottom
       AnchorSideBottom.Control = gbSettings
       Left = 7
-      Height = 361
+      Height = 363
       Hint = 'Steps: Scripted charge and discharge  cycles'
       Top = 176
       Width = 290
@@ -221,14 +254,14 @@ object frmMain: TfrmMain
       OnChange = pcProgramChange
       object tsCharge: TTabSheet
         Caption = 'Char&ge'
-        ClientHeight = 333
-        ClientWidth = 282
+        ClientHeight = 330
+        ClientWidth = 280
         OnEnter = tsChargeEnter
         object rgCharge: TRadioGroup
           Left = 0
-          Height = 199
+          Height = 196
           Top = 0
-          Width = 282
+          Width = 280
           Align = alTop
           Anchors = [akTop, akRight, akBottom]
           AutoFill = True
@@ -239,7 +272,7 @@ object frmMain: TfrmMain
           ChildSizing.ShrinkVertical = crsScaleChilds
           ChildSizing.Layout = cclLeftToRightThenTopToBottom
           ChildSizing.ControlsPerLine = 1
-          ClientHeight = 179
+          ClientHeight = 176
           ClientWidth = 278
           ItemIndex = 4
           Items.Strings = (
@@ -256,33 +289,33 @@ object frmMain: TfrmMain
         object ChargePannel: TPanel
           Left = 8
           Height = 140
-          Top = 210
-          Width = 278
+          Top = 207
+          Width = 276
           Anchors = [akLeft, akRight, akBottom]
           ClientHeight = 140
-          ClientWidth = 278
+          ClientWidth = 276
           Constraints.MaxHeight = 140
           Constraints.MinHeight = 140
           TabOrder = 1
           object lblMin: TLabel
             Left = 208
-            Height = 15
+            Height = 19
             Top = 80
-            Width = 43
+            Width = 53
             Caption = '&minutes'
             FocusControl = edtCutM
             ParentColor = False
           end
           object edtCells: TJLabeledIntegerEdit
             Left = 8
-            Height = 23
+            Height = 36
             Hint = 'Number of cells, charge and cutoff voltage will be multiplied by the number of cells'
             Top = 20
             Width = 96
             DisplayFormat = '0'
             Value = 0
             NegativeColor = clDefault
-            EditLabel.Height = 15
+            EditLabel.Height = 19
             EditLabel.Width = 96
             EditLabel.Caption = 'Ce&lls'
             EditLabel.ParentColor = False
@@ -298,22 +331,22 @@ object frmMain: TfrmMain
           end
           object Label10: TLabel
             Left = 112
-            Height = 15
+            Height = 19
             Top = 80
-            Width = 24
+            Width = 32
             Caption = 'after'
             ParentColor = False
           end
           object edtCutA: TJLabeledFloatEdit
             Left = 8
-            Height = 23
+            Height = 36
             Hint = 'If the charge current will be lower than the charge current, charging will be stopped'
             Top = 76
             Width = 92
             DisplayFormat = '#,0.00'
             Decimals = 2
             NegativeColor = clDefault
-            EditLabel.Height = 15
+            EditLabel.Height = 19
             EditLabel.Width = 92
             EditLabel.Caption = 'C&utoff current (A)'
             EditLabel.ParentColor = False
@@ -323,14 +356,14 @@ object frmMain: TfrmMain
           end
           object edtCutM: TJLabeledIntegerEdit
             Left = 146
-            Height = 23
+            Height = 36
             Hint = 'Delays the end of charge after the cutoff current is reached'
             Top = 76
             Width = 56
             DisplayFormat = '0'
             Value = 0
             NegativeColor = clDefault
-            EditLabel.Height = 15
+            EditLabel.Height = 19
             EditLabel.Width = 56
             EditLabel.Caption = ' '
             EditLabel.ParentColor = False
@@ -340,13 +373,13 @@ object frmMain: TfrmMain
           end
           object edtChargeV: TJLabeledFloatEdit
             Left = 144
-            Height = 23
+            Height = 36
             Top = 20
             Width = 114
             DisplayFormat = '#,0.00'
             Decimals = 2
             NegativeColor = clDefault
-            EditLabel.Height = 15
+            EditLabel.Height = 19
             EditLabel.Width = 114
             EditLabel.Caption = '&Voltage'
             EditLabel.ParentColor = False
@@ -357,17 +390,17 @@ object frmMain: TfrmMain
       end
       object tsDischarge: TTabSheet
         Caption = 'D&ischarge'
-        ClientHeight = 333
-        ClientWidth = 282
+        ClientHeight = 330
+        ClientWidth = 280
         OnEnter = tsDischargeEnter
         object rgDischarge: TRadioGroup
           AnchorSideLeft.Control = tsDischarge
           AnchorSideRight.Control = tsDischarge
           AnchorSideBottom.Control = DischargePanel
           Left = 0
-          Height = 262
+          Height = 259
           Top = 0
-          Width = 282
+          Width = 280
           Align = alTop
           Anchors = [akLeft, akRight, akBottom]
           AutoFill = True
@@ -379,7 +412,7 @@ object frmMain: TfrmMain
           ChildSizing.ShrinkVertical = crsScaleChilds
           ChildSizing.Layout = cclLeftToRightThenTopToBottom
           ChildSizing.ControlsPerLine = 1
-          ClientHeight = 242
+          ClientHeight = 257
           ClientWidth = 278
           ItemIndex = 0
           Items.Strings = (
@@ -395,7 +428,7 @@ object frmMain: TfrmMain
           AnchorSideBottom.Side = asrBottom
           Left = 0
           Height = 70
-          Top = 263
+          Top = 260
           Width = 280
           Anchors = [akLeft, akBottom]
           ClientHeight = 70
@@ -405,13 +438,13 @@ object frmMain: TfrmMain
           TabOrder = 1
           object edtCutV: TJLabeledFloatEdit
             Left = 8
-            Height = 23
+            Height = 36
             Top = 22
             Width = 114
             DisplayFormat = '#,0.00'
             Decimals = 2
             NegativeColor = clDefault
-            EditLabel.Height = 15
+            EditLabel.Height = 19
             EditLabel.Width = 114
             EditLabel.Caption = 'Cutoff Voltage'
             EditLabel.ParentColor = False
@@ -421,7 +454,7 @@ object frmMain: TfrmMain
             Left = 128
             Height = 19
             Top = 22
-            Width = 11
+            Width = 12
             Caption = 'V'
             Font.Height = -16
             Font.Name = 'Sans'
@@ -433,13 +466,13 @@ object frmMain: TfrmMain
       end
       object tsProgram: TTabSheet
         Caption = 'Ste&ps'
-        ClientHeight = 333
-        ClientWidth = 282
+        ClientHeight = 330
+        ClientWidth = 280
         object Label1: TLabel
           Left = 8
-          Height = 15
+          Height = 19
           Top = 1
-          Width = 68
+          Width = 85
           Caption = 'Current step:'
           ParentColor = False
         end
@@ -457,9 +490,9 @@ object frmMain: TfrmMain
         end
         object lblStep: TLabel
           Left = 121
-          Height = 15
+          Height = 19
           Top = 1
-          Width = 37
+          Width = 48
           Caption = 'Testing'
           Color = clYellow
           ParentColor = False
@@ -467,17 +500,17 @@ object frmMain: TfrmMain
         end
         object lblStepNum: TLabel
           Left = 100
-          Height = 15
+          Height = 19
           Top = 1
-          Width = 6
+          Width = 9
           Caption = '0'
           ParentColor = False
         end
         object lblProgTime: TLabel
           Left = 132
-          Height = 15
+          Height = 19
           Top = 61
-          Width = 42
+          Width = 62
           Caption = '00:00:00'
           ParentColor = False
         end
@@ -492,9 +525,9 @@ object frmMain: TfrmMain
         end
         object lblCapI: TLabel
           Left = 25
-          Height = 15
+          Height = 19
           Top = 79
-          Width = 51
+          Width = 63
           Caption = 'CapI/EneI'
           Enabled = False
           ParentColor = False
@@ -514,15 +547,15 @@ object frmMain: TfrmMain
         end
         object lblTimer: TLabel
           Left = 8
-          Height = 15
+          Height = 19
           Top = 138
-          Width = 6
+          Width = 9
           Caption = '0'
           ParentColor = False
         end
         object edtDelim: TEdit
           Left = 7
-          Height = 23
+          Height = 36
           Top = 44
           Width = 100
           MaxLength = 2
@@ -531,9 +564,9 @@ object frmMain: TfrmMain
         end
         object Label2: TLabel
           Left = 7
-          Height = 15
+          Height = 19
           Top = 24
-          Width = 72
+          Width = 90
           Caption = 'Log separator'
           ParentColor = False
         end
@@ -547,18 +580,18 @@ object frmMain: TfrmMain
         end
       end
       object tsConsole: TTabSheet
-        Caption = 'C&onsole'
-        ClientHeight = 333
-        ClientWidth = 282
+        Caption = 'Conso&le'
+        ClientHeight = 330
+        ClientWidth = 280
         object memLog: TMemo
           AnchorSideLeft.Control = tsConsole
           AnchorSideTop.Control = tsConsole
           AnchorSideRight.Control = tsConsole
           AnchorSideRight.Side = asrBottom
           Left = 0
-          Height = 336
+          Height = 333
           Top = 0
-          Width = 282
+          Width = 280
           Anchors = [akTop, akLeft, akRight, akBottom]
           Font.Height = -9
           Font.Name = 'DejaVu Sans Mono'
@@ -577,12 +610,12 @@ object frmMain: TfrmMain
       AnchorSideBottom.Side = asrBottom
       Left = 7
       Height = 172
-      Top = 537
+      Top = 539
       Width = 290
       Anchors = [akRight, akBottom]
       BorderSpacing.Right = 2
-      ClientHeight = 152
-      ClientWidth = 286
+      ClientHeight = 170
+      ClientWidth = 288
       TabOrder = 0
       object btnStart: TButton
         Left = 8
@@ -626,18 +659,18 @@ object frmMain: TfrmMain
       end
       object lblCutEnergy: TLabel
         Left = 107
-        Height = 15
+        Height = 19
         Top = 86
-        Width = 18
+        Width = 22
         Caption = 'Wh'
         Enabled = False
         ParentColor = False
       end
       object chkCutCap: TCheckBox
         Left = 257
-        Height = 17
+        Height = 23
         Top = 56
-        Width = 18
+        Width = 23
         Font.Height = -16
         Font.Name = 'Sans'
         ParentFont = False
@@ -646,9 +679,9 @@ object frmMain: TfrmMain
       end
       object chkCutEnergy: TCheckBox
         Left = 106
-        Height = 17
+        Height = 23
         Top = 56
-        Width = 18
+        Width = 23
         Font.Height = -16
         Font.Name = 'Sans'
         ParentFont = False
@@ -657,18 +690,18 @@ object frmMain: TfrmMain
       end
       object lblCutCap: TLabel
         Left = 255
-        Height = 15
+        Height = 19
         Top = 88
-        Width = 15
+        Width = 17
         Caption = 'Ah'
         Enabled = False
         ParentColor = False
       end
       object lblTestUnit: TLabel
         Left = 112
-        Height = 15
+        Height = 19
         Top = 32
-        Width = 8
+        Width = 9
         Caption = 'A'
         Enabled = False
         ParentColor = False
@@ -689,13 +722,13 @@ object frmMain: TfrmMain
       end
       object edtTestVal: TJLabeledFloatEdit
         Left = 8
-        Height = 23
+        Height = 36
         Top = 24
         Width = 93
         DisplayFormat = '#,0.00'
         Decimals = 2
         NegativeColor = clDefault
-        EditLabel.Height = 15
+        EditLabel.Height = 19
         EditLabel.Width = 93
         EditLabel.Caption = 'TestVal'
         EditLabel.ParentColor = False
@@ -703,14 +736,14 @@ object frmMain: TfrmMain
       end
       object edtCutCap: TJLabeledFloatEdit
         Left = 139
-        Height = 23
+        Height = 36
         Hint = 'End charge/discharge after the specified energy in AH has been put into  or get from the battery'
         Top = 80
         Width = 110
         DisplayFormat = '#,0.00'
         Decimals = 2
         NegativeColor = clDefault
-        EditLabel.Height = 15
+        EditLabel.Height = 19
         EditLabel.Width = 110
         EditLabel.Caption = 'Cutoff capacity'
         EditLabel.ParentColor = False
@@ -721,13 +754,13 @@ object frmMain: TfrmMain
       end
       object edtCutTime: TJLabeledIntegerEdit
         Left = 139
-        Height = 23
+        Height = 36
         Top = 24
         Width = 109
         DisplayFormat = '0'
         Value = 0
         NegativeColor = clDefault
-        EditLabel.Height = 15
+        EditLabel.Height = 19
         EditLabel.Width = 109
         EditLabel.Caption = 'Max time (min)'
         EditLabel.ParentColor = False
@@ -736,14 +769,14 @@ object frmMain: TfrmMain
       end
       object edtCutEnergy: TJLabeledFloatEdit
         Left = 8
-        Height = 23
+        Height = 36
         Hint = 'End charge/discharge after the specified energy in WH has been put into or get from the battery'
         Top = 80
         Width = 93
         DisplayFormat = '#,0.00'
         Decimals = 2
         NegativeColor = clDefault
-        EditLabel.Height = 15
+        EditLabel.Height = 19
         EditLabel.Width = 93
         EditLabel.Caption = 'Cutoff energ&y'
         EditLabel.ParentColor = False
@@ -781,8 +814,8 @@ object frmMain: TfrmMain
   object sdCSV: TSaveDialog
     DefaultExt = '.csv'
     Filter = 'CSV files|*.csv|All files|*.*'
-    Left = 168
-    Top = 392
+    Left = 808
+    Top = 256
   end
   object sdPNG: TSaveDialog
     DefaultExt = '.png'
@@ -799,39 +832,12 @@ object frmMain: TfrmMain
   object tmrWait: TTimer
     Enabled = False
     OnTimer = tmrWaitTimer
-    Left = 686
-    Top = 344
-  end
-  object alList: TActionList
-    Left = 168
-    Top = 113
-    object acSavePNG: TAction
-      Caption = 'Save'
-      OnExecute = mniSavePNGClick
-    end
-    object acSaveCSV: TAction
-      Caption = 'acSaveCSV'
-      OnExecute = mniSaveCSVClick
-      ShortCut = 16467
-    end
-    object acBorderName: TAction
-      Caption = 'acBorderName'
-      OnExecute = mniSetNameClick
-      ShortCut = 115
-    end
-    object acLoadStep: TAction
-      Caption = 'acLoadStep'
-      OnExecute = mniLoadStepClick
-      ShortCut = 114
-    end
-    object acSettings: TAction
-      Caption = 'acSettings'
-      ShortCut = 120
-    end
+    Left = 720
+    Top = 48
   end
   object MainMenu: TMainMenu
-    Left = 330
-    Top = 484
+    Left = 624
+    Top = 48
     object mm_File: TMenuItem
       Caption = '&File'
       object mm_Connect: TMenuItem
@@ -943,8 +949,8 @@ object frmMain: TfrmMain
   object ReconnectTimer: TTimer
     Enabled = False
     OnTimer = ReconnectTimerTimer
-    Left = 686
-    Top = 399
+    Left = 832
+    Top = 48
   end
   object ConnectionWatchdogTimer: TTimer
     Enabled = False

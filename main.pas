@@ -7,7 +7,7 @@ interface
 uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, StdCtrls,
   EditBtn, ComCtrls, Menus, Buttons, ActnList, TAGraph, TASeries,
-  TAIntervalSources, TATransformations, TATools, LazSerial, DateUtils,
+  Grids, TAIntervalSources, TATransformations, TATools, LazSerial, DateUtils,
   TACustomSeries, SynEdit, StepForm, MyIniFile, JLabeledIntegerEdit, math,
   JLabeledFloatEdit, settings, typinfo, types, lcltype, connectform, aboutform, ExtCtrls,
   shortcuthelpform;
@@ -139,6 +139,7 @@ const
   cWinLeft   = 'Left';
   cAppSec = 'Application';
   cMemStepLogHeight = 'MemStepLogHeight';
+  cMemStepLogWidths = 'MemStepLogWidths';
 {$ifdef Windows}
   cSerial = 'Serial-Win';
 {$else}
@@ -280,12 +281,6 @@ type
   { TfrmMain }
 
   TfrmMain = class(TForm)
-    acSavePNG: TAction;
-    acSaveCSV: TAction;
-    acBorderName: TAction;
-    acLoadStep: TAction;
-    acSettings: TAction;
-    alList: TActionList;
     btnAdjust: TButton;
     btnCont: TButton;
     btnProg: TButton;
@@ -335,7 +330,7 @@ type
     lsVoltage: TLineSeries;
     MainMenu: TMainMenu;
     memLog: TMemo;
-    memStepLog: TMemo;
+    memStepLog: TStringGrid;
     mm_Shortcuts: TMenuItem;
     mm_LogFileDir: TMenuItem;
     mm_skipStep: TMenuItem;
@@ -397,7 +392,6 @@ type
     procedure mm_ShortcutsClick(Sender: TObject);
     procedure mm_stepLoadClick(Sender: TObject);
     procedure mm_taskBarNameClick(Sender: TObject);
-    procedure mniDoLogClick(Sender: TObject);
     procedure pcProgramChange(Sender: TObject);
     procedure ReconnectTimerTimer(Sender: TObject);
     procedure btnAdjustClick(Sender: TObject);
@@ -539,6 +533,14 @@ private
     procedure SetRunMode(ARunMode: TRunMode);
     procedure TimerOff;
     procedure setStatusLine(Element:integer; txt:string);
+
+    // StringGrid for step log helper routines
+    procedure memStepLogClear;
+    procedure memStepLogAdd (cmd : string);
+    procedure memStepLogNewStep;                                                         // start a step
+    procedure memStepLogUpdate  (AH,WH,startV,endV,endA : extended; time : TDateTime);   // updates values in current step
+    procedure memStepLogEnd;                                                             // end of current step
+    function  memStepLog2csv    (Separator : char) : TStringList;
   public
   end;
 
@@ -548,6 +550,17 @@ var
 implementation
 
 {$R *.lfm}
+
+const
+  cMemStepLog_step   = 0;
+  cMemStepLog_cmd    = 1;
+  cMemStepLog_AH     = 2;
+  cMemStepLog_WH     = 3;
+  cMemStepLog_time   = 4;
+  cMemStepLog_startV = 5;
+  cMemStepLog_endV   = 6;
+  cMemStepLog_endA   = 7;
+
 
 function ValOk(ANum: Extended): Boolean;
 begin
@@ -756,6 +769,12 @@ begin
             setChargeDischargeTypes(FModel);
             edtChargeV.Enabled:=false;
             frmStep.setDevice(FModels[FModel].Name);
+            if length(frmStep.fileName) > 0 then
+              if frmStep.Compile(fModel,true) = mrOk then
+              begin
+                pcProgram.ActivePage := tsProgram;
+                btnStart.enabled := true;
+              end;
           end;
         end else
         begin
@@ -942,6 +961,7 @@ begin
       if FCurrentCapacity[caEBC] > FChecks.cCapacity then
         if FInProgram then EBCBreak(false,false) else EBCBreak;
     end;
+    LogStep;
   end else
   begin
     DumpSerialData('<','CRC '+cError+':', APacket, crcrecvpos);
@@ -1446,6 +1466,7 @@ var
   fn : string;
   sl: text;
   i : integer;
+  lines : TStringList;
 begin
   btnSkip.Enabled := False;
   mm_skipStep.Enabled := False;
@@ -1461,6 +1482,7 @@ begin
   if FInProgram then
   begin
     LogStep;
+    memStepLogEnd;
     if Force then
     begin
       FInProgram := False;
@@ -1477,8 +1499,9 @@ begin
           Rewrite(sl);
           if IOResult = 0 then
           begin
-            for i := 0 to memStepLog.Lines.Count-1 do
-              writeln(sl,memStepLog.Lines[i]);
+            lines := memStepLog2csv(#9);
+            for i := 0 to Lines.Count-1 do
+              writeln(sl,Lines[i]);
             system.close(sl);
           end else
             MessageDlg(cError,Format(cStepLogCreateErr,[fn,IOResult]), mtError,[mbAbort],0);
@@ -1489,6 +1512,7 @@ begin
       LoadStep;
   end else
   begin
+    memStepLogEnd;
     OffSetting;
     StopLogging;
     beep;
@@ -1638,6 +1662,7 @@ begin
   tmrWait.Enabled := False;
   FEndWaitVoltage := FLastU;
   LogStep;
+  memStepLogEnd;
   LoadStep;
 end;
 
@@ -1649,9 +1674,7 @@ begin
   for I := High(FSteps) downto Low(FSteps) do
   begin
     if FSteps[I].Command = 'LOOP' then
-    begin
       Result := AlignR(IntToStr(FSteps[I].LoopCounter), 3) + ':' + Result;
-    end;
   end;
 {  if Length(Result) > 0 then
   begin
@@ -1664,46 +1687,24 @@ begin
 end;
 
 procedure TfrmMain.LogStep;
-var
+{var
   I: Integer;
   s: string;
   col: array [2..High(cCol)] of string;
+}
 begin
-  for I := Low(col) to High(col) do
-    col[I] := '';
+  if not FInProgram then exit;
 
-  col[2] := FSteps[FCurrentStep].Command;
-  col[5] := MyTimeToStr(Now - FStepTime);
   case FSteps[FCurrentStep].Mode of
     rmNone:;
     rmCharging, rmDischarging, rmDischargingCR:
-    begin
-      col[3] := MyFloatStr(FCurrentCapacity[caEBC]);
-      col[4] := MyFloatStr(FEnergy);//stText[cstEnergy].Caption;
-      col[6] := MyFloatStr(FStartU);
-      col[7] := MyFloatStr(FLastU);
-      col[8] := MyFloatStr(FLastI);
-    end;
+      memStepLogUpdate (FCurrentCapacity[caEBC],FEnergy,FStartU,FLastU,FLastI,Now - FStepTime);
     rmWait:
-    begin
-      col[2] := col[2] + ' ' + IntToStr(FSteps[FCurrentStep].CutTime);
-      col[6] := MyFloatStr(FBeginWaitVoltage);
-      col[7] := MyFloatStr(FEndWaitVoltage);
-    end;
+      memStepLogUpdate (FCurrentCapacity[caEBC],0,FBeginWaitVoltage,FEndWaitVoltage,0,Now - FStepTime);
     rmLoop:
-    begin
-      col[2] := col[2] + ' ' + IntToStr(FSteps[FCurrentStep].Loop);
-    end;
-{    rmEnd:
-    begin
-
-    end;}
+      memStepLogUpdate (0,0,0,0,0,Now - FStepTime);
+    rmEnd:;
   end;
-  s := AlignR(GetStepNum, cCol[1]);
-  for I := Low(col) to High(col) do
-    s := s + edtDelim.Text + AlignR(col[I], cCol[I]);
-
-  memStepLog.Lines.Add(s);
 end;
 
 procedure TfrmMain.OffSetting;
@@ -1736,7 +1737,8 @@ procedure TfrmMain.LoadSettings;
 var
   ini: TMyIniFile;
   s, t: string;
-  I: Integer;
+  I,maxI: Integer;
+  StepLogWidths:TIntegerDynArray;
 
   procedure loadFormSize(Sec,Prefix: string; frm: TForm);
   var i : integer;
@@ -1799,14 +1801,11 @@ begin
     frmSettings.cgSettings.Checked[I] := ini.ReadBool(cSettings, cChkSetting + '_' + IntToStr(I), False);
 
   if frmSettings.cgSettings.Checked[cAutoLoad] then
-    if Length(frmSettings.edtProgFile.FileName) > 0 then
-    begin
-      frmStep.memStep.Lines.LoadFromFile(frmSettings.edtProgFile.FileName);
+    if frmStep.loadFile(frmSettings.edtProgFile.FileName) then
       stStepFile.Caption := ExtractFileName(frmSettings.edtProgFile.FileName);
-      frmStep.sdSave.FileName := frmSettings.edtProgFile.FileName;
-      frmStep.odOpen.FileName := frmSettings.edtProgFile.FileName;
-      frmStep.Caption := frmSettings.edtProgFile.FileName;
-    end;
+   if frmStep.Compiled then
+     pcProgram.ActivePage := tsProgram;
+
   frmSettings.edtIntTime.Value := ini.ReadInteger(cSettings, cIntTime, 60);
   tbxMonitor.Checked := ini.ReadBool(cSettings, cMonitor, True);
 
@@ -1836,6 +1835,16 @@ begin
   mm_AutoLog.Checked := ini.readBool(cAppSec, cAutoLog, false);
   mm_AutoCsvFileName.Checked := ini.readBool(cAppSec, cAutoCsvFileName, true);
 
+  ini.ReadIntegers(cAppSec,cMemStepLogWidths,StepLogWidths);
+  maxI := length(StepLogWidths)-1;
+  if (maxI > 0) then
+  begin
+    if maxI > memStepLog.Columns.Count-1 then maxI := memStepLog.Columns.Count-1;
+    for i := 0 to maxI do
+      memStepLog.Columns[i].Width:=StepLogWidths[i];
+  end;
+  setLength(StepLogWidths,0);
+
   ini.Free;
   SetSettings;
 end;
@@ -1845,6 +1854,7 @@ var
   ini: TMyIniFile;
   s: string;
   I: Integer;
+  StepLogWidths:TIntegerDynArray;
 
   procedure saveFormSize(Sec,Prefix: string; frm: TForm);
   begin
@@ -1856,6 +1866,7 @@ var
 
 begin
   ini := TMyIniFile.Create(FConfFile);
+  ini.CacheUpdates:=true;
   ini.WriteInteger(cStartup, cStartSelection, frmSettings.rgStart.ItemIndex);
   s := cSelection + '_' + IntToStr(frmSettings.rgStart.ItemIndex);
   if not ini.ReadBool(s, cReadOnly, True) then
@@ -1895,6 +1906,12 @@ begin
   ini.WriteString(cAppSec, cSerial, frmconnect.edtDevice.Text);
   ini.WriteBool(cAppSec, cAutoLog, mm_AutoLog.Checked);
   ini.WriteBool(cAppSec, cAutoCsvFileName, mm_AutoCsvFileName.Checked);
+
+  setLength(StepLogWidths, memStepLog.ColCount);
+  for i := 0 to memStepLog.ColCount-1 do
+    StepLogWidths[i] := memStepLog.Columns[i].Width;
+  ini.WriteIntegers(cAppSec, cMemStepLogWidths,StepLogWidths);
+  setLength(StepLogWidths, 0);
   ini.Free;
 end;
 
@@ -1994,13 +2011,11 @@ end;
 
 procedure TfrmMain.DoHexLog(AText: string);
 begin
-  if memStepLog.Lines.Count > 10000 then
-  begin
-    memStepLog.Lines.Delete(0);
-  end;
+  if memLog.Lines.Count > 10000 then
+    memLog.Lines.Delete(0);
   memLog.Lines.Add(AText);
 
-  memStepLog.VertScrollBar.Position := 1000000;
+  memLog.VertScrollBar.Position := 1000000;
 //  SendMessage(memLog.Handle, WM_VSCROLL, SB_BOTTOM, 0);
 end;
 
@@ -2122,6 +2137,7 @@ var
   u: string;
   DoSend: Boolean;
   DoUpdate: Boolean;
+  cmdStr : string;
 begin
 //  {$push}
 //  {$boolEval off}
@@ -2134,10 +2150,12 @@ begin
   begin
     DoSend := True;
     DoUpdate := True;
+
     if FSteps[FCurrentStep].Mode in [rmDischarging, rmDischargingCR] then
       FCurrentDisCapacity := FCurrentCapacity[caEBC];
 
     FCurrentStep := FProgramStep;
+
     FEnergy := 0;
     FCurrentCapacity[caLocal] := 0;
     FWaitCounter := 0;
@@ -2156,29 +2174,24 @@ begin
           rmCharging:
           begin
             if (FPackets[I].Method = mChargeCV)  then
-            begin
-              P2 := CV;
-            end else
-            begin
+              P2 := CV else
               P2 := Cells;
-            end;
             u := cA;
+            memStepLogNewStep;
           end;
           rmDischarging:
           begin
             P2 := CutVolt;
             if FPackets[I].TestVal = tvPower then
-            begin
-              u := cP;
-            end else
-            begin
+              u := cP else
               u := cA;
-            end;
+            memStepLogNewStep;
           end;
           rmDischargingCR:
           begin
             P2 := CutVolt;
             u := cR;
+            memStepLogNewStep;
           end;
           rmWait:
           begin
@@ -2187,6 +2200,7 @@ begin
             tmrWait.Enabled := True;
             edtTestVal.Value := 0.0;
             DoSend := False;
+            memStepLogNewStep;
           end;
           rmLoop:
           begin
@@ -2217,26 +2231,34 @@ begin
 }
               if (not (CapI or EneI)) or (FCurrentDisCapacity >= FLastDisCapacity) then
               begin
-                Dec(Loop);
+
                 FLastDisCapacity := FCurrentDisCapacity;
-                LogStep;
+                memStepLogEnd;
+                memStepLogAdd ('LOOP:'+IntToStr(Loop));
+                Dec(Loop); Inc(LoopCounter);
+
                 FProgramStep := 0;
                 edtTestVal.Value := 0.0;
+
                 LoadStep;
                 Dec(FProgramStep); // Increments in end of recursive call and this call.
-                memStepLog.Lines.Add('---');
+                //memStepLog.Lines.Add('---');
               end else
               begin
                 lblCapI.Enabled := False;
                 lblCapI.Caption := cCapI;
                 shaCapI.Brush.Color := clDefault;
                 tmrWait.Enabled := True; // Triggers next step if loop is finished
+                memStepLogEnd;
+                memStepLogAdd ('LOOP:'+IntToStr(Loop));
+                Inc(LoopCounter);
               end;
             end else
             begin
               tmrWait.Enabled := True; // Triggers next step if loop is finished
+              Inc(LoopCounter);
             end;
-            Inc(LoopCounter);
+            //Inc(LoopCounter);
           end;
           rmEnd:
           begin
@@ -2261,13 +2283,14 @@ begin
           edtCutM.Value := CutAmpTime;
           if Mode = rmCharging then
           begin
+            edtChargeV.Value := CV;
+            edtCells.Value := Cells;
+            {
             if Pos(cCmdCCCV, Command) > 0 then   // AD: FIXME
-            begin
-              edtChargeV.Value := CV;
-            end else
-            begin
+              edtChargeV.Value := CV
+            else
               edtCells.Value := Trunc(P2);
-            end;
+            }
           end else if Mode in [rmDischarging, rmDischargingCR] then
             edtCutV.Value := CutVolt;
         end;
@@ -2275,7 +2298,7 @@ begin
         begin
           SetupChecks;
           FSampleCounter := 0;
-          DoLog('Autooff char: ' + IntToHex(Ord(FPackets[FPacketIndex].AutoOff[1]), 2));
+          //DoLog('Autooff char: ' + IntToHex(Ord(FPackets[FPacketIndex].AutoOff[1]), 2));
           FStartU := FLastU;
           SendData(MakePacket2(I, smStart, TestVal, P2, CutTime, CutAmp));
         end;
@@ -2287,11 +2310,13 @@ begin
     Inc(FProgramStep);
     btnSkip.Enabled := True;
     mm_skipStep.Enabled := True;
+
   end else
   begin
     FInProgram := False;
     EBCBreak (true,true);
     OffSetting;
+    memStepLogEnd;
   end;
 end;
 
@@ -2427,7 +2452,10 @@ end;
 
 procedure TfrmMain.mm_QuitClick(Sender: TObject);
 begin
-  Application.Terminate;
+  //Application.Terminate;  // this does not call onClose
+  Screen.Cursor:=crHourGlass;
+  Application.ProcessMessages;
+  close;
 end;
 
 procedure TfrmMain.mm_saveCsvClick(Sender: TObject);
@@ -2466,7 +2494,8 @@ begin
   if frmStep.Compiled then
   begin
     pcProgram.ActivePage := tsProgram;  // set active tab to program after loading a valid file
-    btnStart.Enabled:=true;
+    if FConnState = csConnected then
+      btnStart.Enabled:=true;
   end;
 
   {if frmStep.odOpen.Execute then
@@ -2487,13 +2516,14 @@ begin
     frmMain.Caption := s;
 end;
 
-procedure TfrmMain.mniDoLogClick(Sender: TObject);
-begin
-
-end;
 
 procedure TfrmMain.pcProgramChange(Sender: TObject);
 begin
+  if (FInProgram) or (not (FRunMode in [rmNone,rmMonitor])) then
+  begin
+    btnStart.Enabled := false;
+    exit;
+  end;
   case pcProgram.TabIndex of
     0: btnStart.Enabled := rgCharge.ItemIndex > -1;
     1: btnStart.Enabled := rgDischarge.ItemIndex > -1;
@@ -2550,6 +2580,7 @@ var
   s: string;
 begin
   FPacketIndex := -1;
+  memStepLogClear;
   if pcProgram.ActivePage = tsCharge then
   begin
     if edtCutA.Value >= edtTestVal.Value then
@@ -2620,8 +2651,7 @@ begin
     btnStart.Enabled := False;
     FProgramStep := 0;
     FInProgram := True;
-    memStepLog.Lines.Clear;
-    memStepLog.Lines.Add(cColumns);
+    memStepLogClear;
   end;
 
   if FPacketIndex > -1 then
@@ -2856,11 +2886,7 @@ begin
   rgCharge.OnClick := @rgChargeClick;
   rgDischarge.OnClick := @rgDischargeClick;
   btnStart.Enabled := False;
-  memStepLog.Lines.Clear;
-  memStepLog.Lines.Add(cVersion);
-//  memStepLog.Lines.Add('041 155');
-//  memStepLog.Lines.Add('140 168');
-//  memStepLog.Lines.Add('144 109');
+  memStepLogClear;
   clearChargeDischargeTypes;
   FRecvStatusIndicatorInc := 1;
   FRecvStatusIndicatorInc := -1;
@@ -3052,6 +3078,83 @@ procedure TfrmMain.setStatusLine(Element:integer; txt:string);
 begin
   MainStatusBar.Panels[Element].Text := txt;
 end;
+
+
+procedure TfrmMain.memStepLogClear;
+begin
+  memStepLog.Options := memStepLog.Options - [goRowSelect];
+  memStepLog.RowCount := 1;
+end;
+
+
+procedure TfrmMain.memStepLogAdd (cmd : string);
+var row : integer;
+begin
+  row := memStepLog.RowCount;
+  memStepLog.RowCount := row +1;
+  memStepLog.Rows[row][cMemStepLog_step] := GetStepNum;
+  memStepLog.Rows[row][cMemStepLog_cmd] := cmd;
+  memStepLog.Options := memStepLog.Options + [goRowSelect];
+  memStepLog.Row := row;
+end;
+
+
+procedure TfrmMain.memStepLogNewStep; // start a step
+var row : integer;
+    cmd : string;
+begin
+  cmd := FSteps[FCurrentStep].Command;
+
+  row := memStepLog.RowCount;
+  memStepLog.RowCount := row +1;
+  memStepLog.Rows[row][cMemStepLog_step] := GetStepNum;
+  memStepLog.Rows[row][cMemStepLog_cmd] := cmd;
+  memStepLog.Options := memStepLog.Options + [goRowSelect];
+  memStepLog.Row := row;
+end;
+
+
+
+procedure TfrmMain.memStepLogUpdate (AH,WH,startV,endV,endA : extended; time : TDateTime);  // updates values in current step
+var row : integer;
+begin
+  row := memStepLog.RowCount-1;
+  if row < 1 then exit;
+  if AH > 0 then memStepLog.Rows[row][cMemStepLog_AH] := MyFloatStr(AH) else memStepLog.Rows[row][cMemStepLog_AH] := '';
+  if WH > 0 then memStepLog.Rows[row][cMemStepLog_WH] := MyFloatStr(WH) else memStepLog.Rows[row][cMemStepLog_WH] := '';
+  if startV > 0 then memStepLog.Rows[row][cMemStepLog_startV] := MyFloatStr(startV) else memStepLog.Rows[row][cMemStepLog_startV] := '';
+  if WH > 0 then memStepLog.Rows[row][cMemStepLog_endV] := MyFloatStr(endV) else memStepLog.Rows[row][cMemStepLog_endV] := '';
+  //if frac(time) > 0 then memStepLog.Rows[row][cMemStepLog_time] := MyTimeToStr(time) else memStepLog.Rows[row][cMemStepLog_time] := '';
+  memStepLog.Rows[row][cMemStepLog_time] := MyTimeToStr(time);
+  if endV > 0 then memStepLog.Rows[row][cMemStepLog_endV] := MyFloatStr(endV) else memStepLog.Rows[row][cMemStepLog_endV] := '';
+  if endA > 0 then memStepLog.Rows[row][cMemStepLog_endA] := MyFloatStr(endA) else memStepLog.Rows[row][cMemStepLog_endA] := '';
+end;
+
+procedure TfrmMain.memStepLogEnd;
+begin
+  memStepLog.Options := memStepLog.Options - [goRowSelect];
+end;
+
+function  TfrmMain.memStepLog2csv (Separator : char) : TStringList;
+var t : TStringList;
+    row,col : integer;
+    line : string;
+begin
+  t := TStringList.Create;
+  for row := 0 to MemStepLog.RowCount-1 do
+  begin
+    line := '';
+    for col := 0 to MemStepLog.ColCount-1 do
+    begin
+      if length(line) > 0 then line := line + Separator;
+      line := line + memStepLog.Rows[row][col];
+    end;
+    t.Add(line);
+  end;
+  result := t;
+end;
+
+
 
 end.
 

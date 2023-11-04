@@ -113,10 +113,13 @@ type
     fModel : integer;
     FCompiled: Boolean;
     FInitialDirIsSet: Boolean;
+    fCurrFileName : string;
   public
     function Compile(Model: integer; showAbort : boolean) : integer;
     property Compiled: Boolean read FCompiled;
+    property fileName: string read fCurrFileName;
     procedure SetInitialDir(ADir: string);
+    function loadFile(afileName : string) : boolean;
   end;
 
 var
@@ -139,6 +142,7 @@ Resourcestring
   cLineColMessage              = '(Line %d, Column %d): %s';
   cDescNote                    = 'Note: A20 and A40 requires charging voltage (chargers have no presets like A5 and A10), may be set via ini file e.g. for LiPo';
   cMinutes                     = 'minutes';
+  cUnsaved                     = 'Unsaved';
 
 implementation
 
@@ -616,13 +620,7 @@ end;
 
 procedure TfrmStep.mniOpenClick(Sender: TObject);
 begin
-  if odOpen.Execute then
-  begin
-    memStep.Lines.LoadFromFile(odOpen.FileName);
-    frmStep.Caption := odOpen.FileName;
-    sdSave.FileName := odOpen.FileName;
-    compile(fModel,false);
-  end;
+  if odOpen.Execute then loadFile(odOpen.FileName);
 end;
 
 procedure TfrmStep.mniSaveClick(Sender: TObject);
@@ -643,6 +641,31 @@ begin
   begin
     memStep.Lines.SaveToFile(sdSave.FileName);
     frmStep.Caption := sdSave.FileName;
+  end;
+end;
+
+function TfrmStep.loadFile(aFileName : string) : boolean;
+begin
+  result := true;
+  if length(aFileName) < 1 then exit(false);
+  try
+     memStep.Lines.LoadFromFile(aFileName);
+  except
+    result := false;
+  end;
+  if result then
+  begin
+    fcurrFileName := aFileName;
+    frmStep.Caption := aFileName;
+    sdSave.FileName := aFileName;
+    odOpen.FileName := aFileName;
+    fcurrFileName := aFileName;
+    Compile(fModel,true);
+  end else
+  begin
+    fcurrFileName := '';
+    frmStep.Caption := cUnsaved;
+    sdSave.FileName := '';
   end;
 end;
 
