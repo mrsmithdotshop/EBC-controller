@@ -17,6 +17,7 @@ type
   TfrmShortcuts = class(TForm)
     IpHtmlPanel1: TIpHtmlPanel;
     procedure FormCreate(Sender: TObject);
+    procedure setHelpText(Sender: TObject);
   private
 
   public
@@ -30,12 +31,23 @@ implementation
 
 uses main;
 
+Resourcestring
+  csk_connect  = 'Connect';
+  csk_Tabs     = 'Tabs';
+  csk_Data     = 'Data';
+  csk_Steps    = 'Steps / Program';
+  csk_Settings = 'Settings';
+  csk_Values   = 'Values';
+  csk_Run      = 'Run';
+  csk_Title    = 'Shortcut keys';
+
+
 {$R *.lfm}
 
 { TfrmShortcuts }
 
 const lineBreak = char(10);
-procedure TfrmShortcuts.FormCreate(Sender: TObject);
+procedure TfrmShortcuts.SetHelpText(Sender: TObject);
 var
   h: string;
   inTab : boolean;
@@ -119,35 +131,35 @@ var
   end;
 
 begin
-  h := '<html><head><title>Shortcut keys</title></head><body>'+lineBreak;
+  h := '<html><head><title>'+csk_Title+'</title></head><body>'+lineBreak;
   inTab := false;
-  addHead('Connect');
+  addHead(csk_connect);
   AddKeyC(frmMain.mm_Connect);
   AddKeyC(frmMain.mm_Disconnect);
 
-  addHead('Tabs');
+  addHead(csk_Tabs);
   addKeyC(frmMain.tsCharge);
   addKeyC(frmMain.tsDischarge);
   addKeyC(frmMain.tsProgram);
   addKeyC(frmMain.tsConsole);
 
-  addHead('Data');
+  addHead(csk_Data);
   addKeyC(frmMain.mm_savePng);
   addKeyC(frmMain.mm_saveCsv);
   addKeyC(frmMain.mm_setCsvLogFile);
   addKeyC(frmMain.mm_AutoLog);
 
-  addHead('Steps / Program');
+  addHead(csk_Steps);
   addKeyC(frmMain.mm_stepLoad);
   addKeyC(frmMain.mm_stepEdit);
   addKeyC(frmMain.mm_skipStep);
 
-  addHead('Settings');
+  addHead(csk_Settings);
   addKeyC(frmMain.mm_Settings);
   addKeyC(frmMain.mm_taskBarName);
   addKeyC(frmMain.mm_LogFileDir);
 
-  addHead('Values');
+  addHead(csk_Values);
   addKeyC(frmMain.edtCells);
   addKeyC(frmMain.edtChargeV);
   addKeyC(frmMain.edtCutA);
@@ -156,7 +168,7 @@ begin
   addKeyC(frmMain.edtCutEnergy);
   addKeyC(frmMain.edtCutCap);
 
-  addHead('Run');
+  addHead(csk_Run);
   addKeyC(frmMain.btnStart);
   addKeyC(frmMain.btnStop);
   addKeyC(frmMain.btnCont);
@@ -166,13 +178,16 @@ begin
   endTab;
   h := h + '</body>';
 
-  (*system.assign(f,'x.html');
-  rewrite(f);
-  system.write(f,h);
-  system.Close(f);*)
-
   IpHtmlPanel1.SetHtmlFromStr(h);
 end;
+
+procedure TfrmShortcuts.FormCreate(Sender: TObject);
+begin
+   SetHelpText(Sender);
+end;
+
+
+
 
 end.
 

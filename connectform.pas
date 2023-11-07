@@ -5,8 +5,8 @@ unit connectform;
 interface
 
 uses
-  Classes, SysUtils, Forms, Controls, Graphics, Dialogs, StdCtrls, ComboEx,
-  ExtCtrls, lazserial, lcltype
+  Classes, SysUtils, Forms, Controls, Graphics, Dialogs, StdCtrls,
+  ExtCtrls, lazserial, lcltype ,LCLTranslator
   {$ifdef windows}
   ,windows,registry
   {$endif}

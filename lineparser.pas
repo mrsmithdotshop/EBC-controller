@@ -92,6 +92,19 @@ end;
 
 implementation
 
+Resourcestring
+  cUnableToAddAlias         = 'unable to add alias, "%s" not found';
+  cUnableToConvertToNumber  = 'unable to convert "%s" to a number';
+  cCommentNotClosed         = 'comment not closed, } missing';
+  cSlashExpected            = '/ expected';
+  cCommandExpected          = 'command expected';
+  cParameterNameExpected    = 'parameter name expected';
+  cEqualExpected            = '= expected';
+  cValueExpected            = 'value expected';
+  cParamDoesNotSupValue     = 'parameter %s does not support a value';
+  cParamNameOrValueExpected = 'parameter name or value expected';
+  cEndOfLineExpected        = 'end of line expected';
+
 
 constructor TLineParserException.create(aLineNumber, aLinePos:integer; aMessage : string);
 begin
@@ -186,7 +199,7 @@ begin
 	  params.add(TlineParserObject.create(upperCase(aliasName),TlineParserObject(params.items[i]).value,TlineParserObject(params.items[i]).valueRequired));
       exit;
     end;
-    raise (TLineParserException.create(0, 0,format('unable to add alias, "%s" not found',[currName])));
+    raise (TLineParserException.create(0, 0,format(cUnableToAddAlias,[currName])));
 end;
 
 procedure TLineParser.beginLine  (aLineNumber : integer; aLine : string);
@@ -253,7 +266,7 @@ begin
     end;
   end;
   if not convOk then
-    raise (TLineParserException.create(LineNo, LinePos,format('unable to convert "%s" to a number',[currWord])));
+    raise (TLineParserException.create(LineNo, LinePos,format(cUnableToConvertToNumber,[currWord])));
   result := TK_VALUE;
 end;
 
@@ -277,7 +290,7 @@ begin
           inc(LinePos);
           while (LinePos <= LineLen) and (Line[LinePos] <> '}') do
             inc(LinePos);
-          if (LinePos > LineLen) then raise (TLineParserException.create(LineNo, LinePos,'comment not closed, } missing'));
+          if (LinePos > LineLen) then raise (TLineParserException.create(LineNo, LinePos,cCommentNotClosed));
           inc(LinePos);
           lastWasComment := true;
         end;
@@ -287,7 +300,7 @@ begin
           inc(LinePos);
           if LinePos < LineLen then
             if Line[LinePos] = '/' then exit(false);
-          raise (TLineParserException.create(LineNo, LinePos,'/ expected'));
+          raise (TLineParserException.create(LineNo, LinePos,cSlashExpected));
         end;
     end else
       exit(false);
@@ -322,7 +335,7 @@ var tk:integer;
 begin
   tk := next;
   if (tk = TK_EOL) or ((tkType = TTokenCommand) and (tk >= 0)) then exit(tk);
-  raise (TLineParserException.create(LineNo, LinePos,'command expected'));
+  raise (TLineParserException.create(LineNo, LinePos,cCommandExpected));
 end;
 
 function TLineParser.expectParamOrEOL : integer;
@@ -332,18 +345,18 @@ begin
   result := next;
   if (result = TK_EOL) then exit(result);
   if tkType <> TTokenParam then
-    raise (TLineParserException.create(LineNo, LinePos,'parameter name expected'));
+    raise (TLineParserException.create(LineNo, LinePos,cParameterNameExpected));
   tkNameBuf := currWord;
 
   if params.requiresValue(tkNameBuf) then
   begin
     tk := next;
     if tk <> TK_EQUAL then
-      raise (TLineParserException.create(LineNo, LinePos,'= expected'));
+      raise (TLineParserException.create(LineNo, LinePos,cEqualExpected));
     tk := next;
     if tk <> TK_VALUE then
 
-    raise (TLineParserException.create(LineNo, LinePos,'value expected'));
+    raise (TLineParserException.create(LineNo, LinePos,cValueExpected));
     currWord := tkNameBuf;
   end else
   begin
@@ -351,7 +364,7 @@ begin
     currWord := tkNameBuf;
     if LinePos <= LineLen then
       if Line[LinePos] = '=' then
-        raise (TLineParserException.create(LineNo, LinePos,format('parameter %s does not support a value',[currWord])));
+        raise (TLineParserException.create(LineNo, LinePos,format(cParamDoesNotSupValue,[currWord])));
   end;
 end;
 
@@ -364,17 +377,17 @@ begin
   if (result = TK_EOL) then exit(result);
   if (result = TK_VALUE) then exit (result);
   if tkType <> TTokenParam then
-    raise (TLineParserException.create(LineNo, LinePos,'parameter name or value expected'));
+    raise (TLineParserException.create(LineNo, LinePos,cParamNameOrValueExpected));
   tkNameBuf := currWord;
 
   if params.requiresValue(tkNameBuf) then
   begin
     tk := next;
     if tk <> TK_EQUAL then
-      raise (TLineParserException.create(LineNo, LinePos,'= expected'));
+      raise (TLineParserException.create(LineNo, LinePos,cEqualExpected));
     tk := next;
     if tk <> TK_VALUE then
-      raise (TLineParserException.create(LineNo, LinePos,'value expected'));
+      raise (TLineParserException.create(LineNo, LinePos,cValueExpected));
     currWord := tkNameBuf;
   end else
   begin
@@ -382,7 +395,7 @@ begin
     currWord := tkNameBuf;
     if LinePos <= LineLen then
       if Line[LinePos] = '=' then
-        raise (TLineParserException.create(LineNo, LinePos,format('parameter %s does not support a value',[currWord])));
+        raise (TLineParserException.create(LineNo, LinePos,format(cParamDoesNotSupValue,[currWord])));
   end;
 end;
 
@@ -391,14 +404,14 @@ function TLineParser.expectValue : integer;
 begin
   result := next;
   if result <> TK_VALUE then
-    raise (TLineParserException.create(LineNo, LinePos,'value expected'));
+    raise (TLineParserException.create(LineNo, LinePos,cValueExpected));
 end;
 
 function TLineParser.expectEOL : integer;
 begin
   result := next;
   if (result = TK_EOL) then exit(result);
-  raise (TLineParserException.create(LineNo,LinePos,'end of line expected'));
+  raise (TLineParserException.create(LineNo,LinePos,cEndOfLineExpected));
 end;
 
 end.

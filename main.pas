@@ -10,7 +10,7 @@ uses
   Grids, TAIntervalSources, TATransformations, TATools, LazSerial, DateUtils,
   TACustomSeries, SynEdit, StepForm, MyIniFile, JLabeledIntegerEdit, math,
   JLabeledFloatEdit, settings, typinfo, types, lcltype, connectform, aboutform, ExtCtrls,
-  shortcuthelpform;
+  shortcuthelpform, LCLTranslator, i18nutils;
 
 const
 {$ifdef Windows}
@@ -18,7 +18,8 @@ const
 {$else}
   cFixedFont = 'Liberation Mono';
 {$endif}
-  cVersion = 'EBC Controller v2.17';
+  cVersion = '2.17';
+  cVersionStr= 'EBC Controller '+cVersion;
 
   cConnectRetries = 10;
 
@@ -45,15 +46,9 @@ const
   cA = 'A';
   cP = 'W';
   cR = 'Ω';
-  cCurrent = 'Current';
-  cPower = 'Power';
-  cResistance = 'Resistance';
 
   cDefaultCaption = 'EBC Controller';
 
-  cConnecting = 'Connecting...';
-  cNotConnected = 'Not connected';
-  cConnected = 'Connected';
   cNull = '00.00';
 
   cName = 'Name';
@@ -103,7 +98,6 @@ const
   cMaxTime = 'MaxTime';
   cIntTime = 'IntegrationTime';
 
-
   cStartup = 'Startup';
   cUseLast = 'UseLast';
   cChargeIndex = 'ChargeIndex';
@@ -151,6 +145,9 @@ Resourcestring
   cFatal                   = 'Fatal Error';
   cError                   = 'Error';
   cCurrentHint             = 'Set the charge/discharge current in Ampere';
+  cCurrent                 = 'Current';
+  cPower                   = 'Power';
+  cResistance              = 'Resistance';
   cPowerHint               = 'Set the charge/discharge Power in Watt';
   cResistanceHint          = 'Set the charge/discharge current resistance in Ohm';
   cConnectTimeout          = 'Unable to connect - timeout';
@@ -172,7 +169,7 @@ Resourcestring
   cFileOverwrite           = 'file %s already exists'+#13+'Overwrite File ?';
   cUnableToCreateLogFile   = 'unable to create logfile %s (%d)';
   cErrorClosingLogfile     = 'Error %d while closing logfile)';
-  cUnableToConnectTo       = 'Unable not connect to';
+  cUnableToConnectTo       = 'Unable to connect to %s';
   cConnectionLost          = 'Connection Lost';
   cPacketTimeout           = 'Timout waiting for a packet from charger device';
   cSetBorderName           = 'Set border name';
@@ -186,6 +183,10 @@ Resourcestring
   cTime                    = 'Time';
   cStarted                 = 'started';
   cUnknown                 = 'unknown';
+  cConnecting              = 'Connecting...';
+  cNotConnected            = 'Not connected';
+  cConnected               = 'Connected';
+
 
 
 
@@ -331,6 +332,8 @@ type
     MainMenu: TMainMenu;
     memLog: TMemo;
     memStepLog: TStringGrid;
+    mm_langEnglish: TMenuItem;
+    mmm_language: TMenuItem;
     mm_Shortcuts: TMenuItem;
     mm_LogFileDir: TMenuItem;
     mm_skipStep: TMenuItem;
@@ -354,7 +357,7 @@ type
     mmm_Settings: TMenuItem;
     mm_About: TMenuItem;
     mmm_Help: TMenuItem;
-    mm_File: TMenuItem;
+    mmm_File: TMenuItem;
     mm_Quit: TMenuItem;
     Separator1: TMenuItem;
     mm_Disconnect: TMenuItem;
@@ -380,6 +383,7 @@ type
     Serial: TLazSerial;
     procedure ConnectionWatchdogTimerTimer(Sender: TObject);
     procedure mm_AboutClick(Sender: TObject);
+    procedure mm_langClick(Sender: TObject);
     procedure mm_AutoCsvFileNameClick(Sender: TObject);
     procedure mm_AutoLogClick(Sender: TObject);
     procedure mm_ConnectClick(Sender: TObject);
@@ -2137,7 +2141,6 @@ var
   u: string;
   DoSend: Boolean;
   DoUpdate: Boolean;
-  cmdStr : string;
 begin
 //  {$push}
 //  {$boolEval off}
@@ -2383,7 +2386,7 @@ begin
     setStatusLine(cst_ConnectedModel,'');
     ReconnectTimer.Enabled:= false;
     ConnectionWatchdogTimer.Enabled := false;
-    Application.MessageBox(pchar(cUnableToConnectTo + ' ' + frmconnect.edtDevice.Text),pchar(cError),MB_ICONSTOP);
+    Application.MessageBox(pchar(format(cUnableToConnectTo,[frmconnect.edtDevice.Text])),pchar(cError),MB_ICONSTOP);
   end;
 end;
 
@@ -2419,6 +2422,13 @@ begin
     t.free;
   end;
 end;
+
+procedure TfrmMain.mm_langClick(Sender: TObject);
+begin
+  poSelectLanguageMenuClick(Sender);
+  frmShortcuts.setHelpText(Sender);
+end;
+
 
 procedure TfrmMain.ConnectionWatchdogTimerTimer(Sender: TObject);
 begin
@@ -2903,6 +2913,8 @@ begin
       with TControl(gbSettings.Controls[i]) do
         Top := Top - 16;
   {$endif}
+
+  poGenerateLanguageSelectMenuEntries(mmm_Language, @mm_langClick);
 end;
 
 procedure TfrmMain.memLogChange(Sender: TObject);

@@ -1,0 +1,874 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: ebcc\n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: Armin Diehl <ad@ardiehl.de>\n"
+"Language-Team: \n"
+"Language: de\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 3.4\n"
+
+#: lineparser.ccommandexpected
+msgid "command expected"
+msgstr "Kommando erwartet"
+
+#: lineparser.ccommentnotclosed
+msgid "comment not closed, } missing"
+msgstr "Nicht abgeschlossener Kommentar, } erwartet"
+
+#: lineparser.cendoflineexpected
+msgid "end of line expected"
+msgstr "Zeilenende erwartet"
+
+#: lineparser.cequalexpected
+msgid "= expected"
+msgstr "= erwartet"
+
+#: lineparser.cparamdoesnotsupvalue
+#, object-pascal-format
+msgid "parameter %s does not support a value"
+msgstr "Der Parameter %s unterstützt keinen Wert"
+
+#: lineparser.cparameternameexpected
+msgid "parameter name expected"
+msgstr "Parametername erwartet"
+
+#: lineparser.cparamnameorvalueexpected
+msgid "parameter name or value expected"
+msgstr "Parametername oder Wert erwartet"
+
+#: lineparser.cslashexpected
+msgid "/ expected"
+msgstr "/ erwartet"
+
+#: lineparser.cunabletoaddalias
+#, object-pascal-format
+msgid "unable to add alias, \"%s\" not found"
+msgstr "Alias kann nicht hinzugefügt werden, \"%s\" nicht gefunden"
+
+#: lineparser.cunabletoconverttonumber
+#, object-pascal-format
+msgid "unable to convert \"%s\" to a number"
+msgstr "\"%s\" kann nicht in eine Zahl konvertiert werden"
+
+#: lineparser.cvalueexpected
+msgid "value expected"
+msgstr "Wert erwartet"
+
+#: main.cautolognoautofilename
+msgid "AutoLog is defined but neither a log file name nor Auto CSV Filename is specified"
+msgstr "Autolog ist aktiviert aber weder ist ein Dateiname angegeben noch ist Auto CSV Dateiname aktiviert"
+
+#: main.ccapi
+msgid "CapI: "
+msgstr ""
+
+#: main.cchargecurrexeeded
+#, object-pascal-format
+msgid "Charge current (%fA) exceeds the maximum supported by %s (%fA)"
+msgstr "Der Ladestrom (%fA) übersteigt den maximal möglichen Ladestrom vom %s(%fA)"
+
+#: main.cchargelowercutoff
+#, object-pascal-format
+msgid "Charge current (%fA) is lower than cutoff current (%fA)"
+msgstr "Der Ladestrom (%fA) ist kleiner als der Abschaltstrom (%fA)"
+
+#: main.cchargevoltageexeeded
+#, object-pascal-format
+msgid "Charge voltage (%fV) exceeds the maximum supported by %s (%fV)"
+msgstr "Die Ladespannung (%fV) übersteigt die maximal mögliche Ladespannung vom %s(%fA)"
+
+#: main.cconnected
+msgid "Connected"
+msgstr "Verbunden"
+
+#: main.cconnecting
+msgid "Connecting..."
+msgstr "Verbinde..."
+
+#: main.cconnectionlost
+msgid "Connection Lost"
+msgstr "Verbindung wurde getrennt"
+
+#: main.cconnecttimeout
+msgid "Unable to connect - timeout"
+msgstr "Keine Verbindung möglich - Zeitüberschreitung"
+
+#: main.ccurrent
+msgid "Current"
+msgstr "Strom"
+
+#: main.ccurrenthint
+msgid "Set the charge/discharge current in Ampere"
+msgstr "Ladestrom für Laden/Entladen in Ampere"
+
+#: main.ccutoffgtoechargec
+#, object-pascal-format
+msgid "Cutoff current (%fA) is greater or equal to charage current (%fA)"
+msgstr "Abschaltstrom (%fA) ist größer oder gleich Ladestrom (%fA)"
+
+#: main.cdecodecorrentexception
+#, object-pascal-format
+msgid "DecodeCurrent raised %s (%2x%2x)"
+msgstr ""
+
+#: main.cdecodevoltageexception
+#, object-pascal-format
+msgid "DecodeVoltage raised %s (%2x%2x)"
+msgstr ""
+
+#: main.cdischargeampsexeeded
+#, object-pascal-format
+msgid "Discharge current (%fA) exceeds the maximum supported by %s (%fA)"
+msgstr "Entladestrom (%fA) überschreitet den maximalen Ladestrom vom %s (%fA)"
+
+#: main.cedit
+msgctxt "main.cedit"
+msgid "Edit..."
+msgstr "Bearbeiten..."
+
+#: main.cenei
+msgid "EneI: "
+msgstr ""
+
+#: main.cerror
+msgid "Error"
+msgstr "Fehler"
+
+#: main.cerrorclosinglogfile
+#, object-pascal-format
+msgid "Error %d while closing logfile)"
+msgstr "Fehler %d beim schließen der Logdatei"
+
+#: main.cerrorreadingmodelfromsec
+#, object-pascal-format
+msgid "%s while reading Model= from %s (Section %d)"
+msgstr "%s beim lesen von Model aus %s (Sektion %d)"
+
+#: main.cfatal
+msgid "Fatal Error"
+msgstr "Fataler Fehler"
+
+#: main.cfileexists
+msgid "File Exists"
+msgstr "Datei vorhanden"
+
+#: main.cfileoverwrite
+#, object-pascal-format
+msgid ""
+"file %s already exists\n"
+"Overwrite File ?"
+msgstr "Datei %s ist bereits vorhanden, Überschreiben ?"
+
+#: main.cidentmodelnotfound
+#, object-pascal-format
+msgid "Ident for model %d not found in %s"
+msgstr "Ident für Modell %d nicht gefunden in %s"
+
+#: main.cinvalidchecksum
+#, object-pascal-format
+msgid "<%s invalid checksum"
+msgstr "<%s ungültige Prüfsumme"
+
+#: main.cnochargedischargeprofile
+#, object-pascal-format
+msgid "No charge/discharge profiles defined in configuration file (%s)"
+msgstr "Es keine Lade/Entladeprofile in der Konfigurationsdatei (%s) definiert"
+
+#: main.cnochargeprofileselected
+msgid "no charging profile selected"
+msgstr "Keine Ladeprofil ausgewählt"
+
+#: main.cnoconnectpackage
+#, object-pascal-format
+msgid "There is no connect packet defined in configuration file (%s)"
+msgstr ""
+
+#: main.cnodisconnectpackage
+#, object-pascal-format
+msgid "There is no disconnect packet defined in configuration file (%s)"
+msgstr ""
+
+#: main.cnomodelsdefined
+#, object-pascal-format
+msgid "No models defined in configuration file (%s)"
+msgstr "Keine Modelle in der Konfigurationsdatei (%s)"
+
+#: main.cnotconnected
+msgid "Not connected"
+msgstr "Nicht Verbunden"
+
+#: main.cpacketnotinconffile
+#, object-pascal-format
+msgid "packet \"%S\" not found in config file"
+msgstr "packet \"%S\" nicht in der Configdatei gefunden"
+
+#: main.cpackettimeout
+msgid "Timout waiting for a packet from charger device"
+msgstr "Zeitüberschreitung bei Warten auf Paket vom Gerät"
+
+#: main.cpower
+msgid "Power"
+msgstr "Leistung"
+
+#: main.cpowerhint
+msgid "Set the charge/discharge Power in Watt"
+msgstr "Einstellungen der Lade/Entladeleistung in Watt"
+
+#: main.cresistance
+msgid "Resistance"
+msgstr "Widerstand"
+
+#: main.cresistancehint
+msgid "Set the charge/discharge current resistance in Ohm"
+msgstr ""
+
+#: main.csetbordername
+msgid "Set border name"
+msgstr ""
+
+#: main.cstarted
+msgid "started"
+msgstr "gestartet"
+
+#: main.csteplogcreateerr
+#, object-pascal-format
+msgid "unable to create step logfile %s (%d)"
+msgstr "Step-Logdatei konnte nicht angelegt werden %s (%d)"
+
+#: main.ctime
+#, fuzzy
+msgctxt "main.ctime"
+msgid "Time"
+msgstr "Zeit"
+
+#: main.cunabletoconnectto
+#, object-pascal-format
+msgid "Unable to connect to %s"
+msgstr "Verbinden mit %s fehlgeschlagen"
+
+#: main.cunabletocreatelogfile
+#, object-pascal-format
+msgid "unable to create logfile %s (%d)"
+msgstr "Logdatei %s konnte nicht angelegt werden (%d)"
+
+#: main.cunknown
+msgid "unknown"
+msgstr "unbekannt"
+
+#: main.cview
+msgid "View..."
+msgstr "Ansicht..."
+
+#: shortcuthelpform.csk_connect
+#, fuzzy
+msgctxt "shortcuthelpform.csk_connect"
+msgid "Connect"
+msgstr "Verbinden"
+
+#: shortcuthelpform.csk_data
+msgid "Data"
+msgstr "Daten"
+
+#: shortcuthelpform.csk_run
+msgid "Run"
+msgstr "Starten / Beenden"
+
+#: shortcuthelpform.csk_settings
+#, fuzzy
+msgctxt "shortcuthelpform.csk_settings"
+msgid "Settings"
+msgstr "Einstellungen"
+
+#: shortcuthelpform.csk_steps
+msgid "Steps / Program"
+msgstr "Schritte"
+
+#: shortcuthelpform.csk_tabs
+msgid "Tabs"
+msgstr ""
+
+#: shortcuthelpform.csk_title
+msgctxt "shortcuthelpform.csk_title"
+msgid "Shortcut keys"
+msgstr "Tastaturkürzel"
+
+#: shortcuthelpform.csk_values
+msgid "Values"
+msgstr "Werte"
+
+#: stepform.cchargecurrnotspecified
+msgid "Charge current not specified (curr=)"
+msgstr "Ladestrom (curr=) nicht spezifiziert"
+
+#: stepform.cchargevoltagenotspecified
+msgid "Charge voltage not specified in script nor in conf file (volt=)"
+msgstr "Ladespannung nicht im Script und nicht in der Conf-File angegeben (volt=)"
+
+#: stepform.ccommandexpected
+msgid "Command expected"
+msgstr "Kommando erwartet"
+
+#: stepform.ccutoffcurrnotspecified
+msgid "Cutoff current not specified (cuta=)"
+msgstr "Abschaltstrom nicht angegeben (cuta=)"
+
+#: stepform.cdescnote
+msgid "Note: A20 and A40 requires charging voltage (chargers have no presets like A5 and A10), may be set via ini file e.g. for LiPo"
+msgstr "Hinweis: A20 und A40 benötigen Ladespannung (diese haben keine Voreinstellungen wie A5 und 10), kann auch in der ini-Datei, z.B. für LiPo angegeben werden"
+
+#: stepform.cerrorinscriptfile
+msgid "Error in script file"
+msgstr "Fehler in Scriptdatei"
+
+#: stepform.clinecolmessage
+#, object-pascal-format
+msgid "(Line %d, Column %d): %s"
+msgstr "(Zeile %d, Spalte %d): %s"
+
+#: stepform.cloopvaluealreadyspecified
+msgid "Loop value already specified"
+msgstr "Loop-Wert wurde bereits angegeben"
+
+#: stepform.cminutes
+msgid "minutes"
+msgstr "Minuten"
+
+#: stepform.cunexpectedcommand
+msgid "unexpected command"
+msgstr "Unerwartetes Kommando"
+
+#: stepform.cunexpectedparamcharge
+msgid "unexpected parameter for charge"
+msgstr "Ungültiger Parameter für Laden"
+
+#: stepform.cunexpectedpardischarge
+#, object-pascal-format
+msgid "unexpected parameter for discharge (%s)"
+msgstr "Ungültiger Parameter für Entladen  (%s)"
+
+#: stepform.cunexpectedpardischargecp
+#, object-pascal-format
+msgid "unexpected parameter for discharge current power (%s)"
+msgstr "Ungültiger Parameter für Entladen mit konstanter Leistung (%s)"
+
+#: stepform.cunexpectedpardischargecr
+#, object-pascal-format
+msgid "unexpected parameter for discharge current resistance(%s)"
+msgstr "Ungültiger Parameter für Entladen mit konstantem Widerstand (%s)"
+
+#: stepform.cunexpectedparloop
+msgid "unexpected parameter for loop"
+msgstr "Ungültiger Parameter für LOOP"
+
+#: stepform.cunsaved
+msgctxt "stepform.cunsaved"
+msgid "Unsaved"
+msgstr "Nicht gespeichert"
+
+#: tfrmabout.button1.caption
+msgctxt "tfrmabout.button1.caption"
+msgid "Ok"
+msgstr ""
+
+#: tfrmabout.caption
+msgid "About"
+msgstr "Über"
+
+#: tfrmconnect.cancelbutton.caption
+#, fuzzy
+msgctxt "tfrmconnect.cancelbutton.caption"
+msgid "Cancel"
+msgstr "Abbrechen"
+
+#: tfrmconnect.caption
+msgctxt "tfrmconnect.caption"
+msgid "Connect"
+msgstr "Verbinden"
+
+#: tfrmconnect.devicelabel.caption
+msgid "&Device"
+msgstr "&Port"
+
+#: tfrmconnect.okbutton.caption
+msgctxt "tfrmconnect.okbutton.caption"
+msgid "Ok"
+msgstr ""
+
+#: tfrmmain.btnadjust.caption
+msgid "Adjust"
+msgstr "Anpassen"
+
+#: tfrmmain.btncont.caption
+msgid "Cont"
+msgstr ""
+
+#: tfrmmain.btnprog.caption
+#, fuzzy
+msgctxt "tfrmmain.btnprog.caption"
+msgid "Edit..."
+msgstr "Bearbeiten..."
+
+#: tfrmmain.btnprog.hint
+msgid "Edit the current script, load one or create a new one <F12>"
+msgstr "Bearbeiten des aktuellen Scripts , ein Script laden oder ein neues erstellen <F12>"
+
+#: tfrmmain.btnskip.caption
+msgid "Skip step"
+msgstr "Schritt überspringen"
+
+#: tfrmmain.btnskip.hint
+msgid "Abort the current step and continue with the next one <F11>"
+msgstr "Aktuellen Schritt überspringen und mit nächstem fortfahren <F11>"
+
+#: tfrmmain.btnstart.caption
+msgid "&Start"
+msgstr "&Start"
+
+#: tfrmmain.btnstart.hint
+msgid "Start charge,discharge or program"
+msgstr "Laden, Entladen oder Schritte starten"
+
+#: tfrmmain.btnstop.caption
+msgid "St&op"
+msgstr "St&op"
+
+#: tfrmmain.caption
+msgid "EBC_controller"
+msgstr "EBC_controller"
+
+#: tfrmmain.chart.axislist[0].title.caption
+msgid "[V]"
+msgstr "[V]"
+
+#: tfrmmain.chart.axislist[1].title.caption
+msgctxt "tfrmmain.chart.axislist[1].title.caption"
+msgid "Time"
+msgstr "Zeit"
+
+#: tfrmmain.chart.axislist[2].title.caption
+msgid "[A]"
+msgstr "[A]"
+
+#: tfrmmain.edtcells.editlabel.caption
+msgid "Ce&lls"
+msgstr "Z&ellen"
+
+#: tfrmmain.edtcells.hint
+msgid "Number of cells, charge and cutoff voltage will be multiplied by the number of cells"
+msgstr "Anzahl Zellen, Lade- und Endladespannung wird mit der Zellenanzahl multipliziert"
+
+#: tfrmmain.edtchargev.editlabel.caption
+msgid "&Voltage"
+msgstr "&Spannung"
+
+#: tfrmmain.edtcuta.editlabel.caption
+msgid "C&utoff current (A)"
+msgstr "Endstrom (A)"
+
+#: tfrmmain.edtcuta.hint
+msgid "If the charge current will be lower than the charge current, charging will be stopped"
+msgstr ""
+
+#: tfrmmain.edtcutcap.editlabel.caption
+msgid "Cutoff capacity"
+msgstr "Endkapazität"
+
+#: tfrmmain.edtcutcap.hint
+msgid "End charge/discharge after the specified energy in AH has been put into  or get from the battery"
+msgstr ""
+
+#: tfrmmain.edtcutenergy.editlabel.caption
+msgid "Cutoff energ&y"
+msgstr ""
+
+#: tfrmmain.edtcutenergy.hint
+msgid "End charge/discharge after the specified energy in WH has been put into or get from the battery"
+msgstr ""
+
+#: tfrmmain.edtcutm.editlabel.caption
+msgid " "
+msgstr ""
+
+#: tfrmmain.edtcutm.hint
+msgid "Delays the end of charge after the cutoff current is reached"
+msgstr "Verzögert das Ende der Ladung nachdem der Endstrom erreicht wurde"
+
+#: tfrmmain.edtcuttime.editlabel.caption
+msgid "Max time (min)"
+msgstr "Max Zeit (Min)"
+
+#: tfrmmain.edtcutv.editlabel.caption
+msgid "Cutoff Voltage"
+msgstr "Endspannung"
+
+#: tfrmmain.edtdelim.text
+msgid "|"
+msgstr "|"
+
+#: tfrmmain.edttestval.editlabel.caption
+msgid "TestVal"
+msgstr ""
+
+#: tfrmmain.gbstatus.caption
+msgid "Status"
+msgstr "Status"
+
+#: tfrmmain.label1.caption
+msgid "Current step:"
+msgstr "Aktueller Schritt:"
+
+#: tfrmmain.label10.caption
+msgid "after"
+msgstr "nach"
+
+#: tfrmmain.label2.caption
+msgid "Log separator"
+msgstr "Trennzeichen"
+
+#: tfrmmain.lblcapi.caption
+msgid "CapI/EneI"
+msgstr "CapI/EneI"
+
+#: tfrmmain.lblcutcap.caption
+msgid "Ah"
+msgstr "AH"
+
+#: tfrmmain.lblcutenergy.caption
+msgid "Wh"
+msgstr "WH"
+
+#: tfrmmain.lblcutoffv1.caption
+msgid "V"
+msgstr "V"
+
+#: tfrmmain.lblmin.caption
+msgid "&minutes"
+msgstr "&Minuten"
+
+#: tfrmmain.lblprogtime.caption
+msgid "00:00:00"
+msgstr ""
+
+#: tfrmmain.lblstep.caption
+msgid "Testing"
+msgstr "Teste"
+
+#: tfrmmain.lblstepnum.caption
+msgctxt "tfrmmain.lblstepnum.caption"
+msgid "0"
+msgstr ""
+
+#: tfrmmain.lbltestunit.caption
+msgid "A"
+msgstr "A"
+
+#: tfrmmain.lbltimer.caption
+msgctxt "tfrmmain.lbltimer.caption"
+msgid "0"
+msgstr "-"
+
+#: tfrmmain.memsteplog.columns[0].title.caption
+msgid "Step"
+msgstr "Schritt"
+
+#: tfrmmain.memsteplog.columns[1].title.caption
+msgid "cmd"
+msgstr "Kommando"
+
+#: tfrmmain.memsteplog.columns[2].title.caption
+msgid "AH"
+msgstr "AH"
+
+#: tfrmmain.memsteplog.columns[3].title.caption
+msgid "WH"
+msgstr "WH"
+
+#: tfrmmain.memsteplog.columns[4].title.caption
+#, fuzzy
+msgctxt "tfrmmain.memsteplog.columns[4].title.caption"
+msgid "Time"
+msgstr "Zeit"
+
+#: tfrmmain.memsteplog.columns[5].title.caption
+msgid "Start voltage"
+msgstr "Startspannung"
+
+#: tfrmmain.memsteplog.columns[6].title.caption
+msgid "End voltage"
+msgstr "Endspannung"
+
+#: tfrmmain.memsteplog.columns[7].title.caption
+msgid "End current"
+msgstr "Endstrom"
+
+#: tfrmmain.mmm_data.caption
+msgid "D&ata"
+msgstr "D&aten"
+
+#: tfrmmain.mmm_file.caption
+msgctxt "tfrmmain.mmm_file.caption"
+msgid "&File"
+msgstr "&Datei"
+
+#: tfrmmain.mmm_help.caption
+msgid "&Help"
+msgstr "&Hilfe"
+
+#: tfrmmain.mmm_language.caption
+#, fuzzy
+#| msgid "Language"
+msgid "La&nguage"
+msgstr "Sprache"
+
+#: tfrmmain.mmm_settings.caption
+msgid "S&ettings"
+msgstr "Einstell&ungen"
+
+#: tfrmmain.mmm_step.caption
+msgid "S&teps"
+msgstr "&Schritte"
+
+#: tfrmmain.mm_about.caption
+msgid "&About"
+msgstr "&Über ebcc"
+
+#: tfrmmain.mm_autocsvfilename.caption
+msgid "Auto CSV &Filename"
+msgstr "Auto CSV Dateiname"
+
+#: tfrmmain.mm_autolog.caption
+msgid "&Auto Log"
+msgstr "&Auto Log"
+
+#: tfrmmain.mm_autolog.hint
+msgid "Toggle CSV auto log file naming"
+msgstr "Umschalten der automatischen Benennung der CSV-Logdatei"
+
+#: tfrmmain.mm_connect.caption
+msgid "&Connect"
+msgstr "&Verbinden"
+
+#: tfrmmain.mm_connect.hint
+msgid "Connect to charger"
+msgstr "&Verbinde mit Gerät"
+
+#: tfrmmain.mm_disconnect.caption
+msgid "&Disconnect"
+msgstr "&Trennen"
+
+#: tfrmmain.mm_disconnect.hint
+msgid "Disconnect from charger"
+msgstr "Verbindung zum Gerät trennen"
+
+#: tfrmmain.mm_langenglish.caption
+msgid "English (en)"
+msgstr "Englisch (en)"
+
+#: tfrmmain.mm_logfiledir.caption
+msgid "Set CSV log file &directory"
+msgstr "Logdateiverzeichnis einstellen"
+
+#: tfrmmain.mm_quit.caption
+msgid "&Quit"
+msgstr "&Beenden"
+
+#: tfrmmain.mm_savecsv.caption
+msgid "Save to &CSV"
+msgstr "Speichern als &csv"
+
+#: tfrmmain.mm_savepng.caption
+msgid "Save to &png"
+msgstr "Speichern als &png"
+
+#: tfrmmain.mm_setcsvlogfile.caption
+msgid "Set CSV log &file"
+msgstr "CSV Logdateinamen einstellen"
+
+#: tfrmmain.mm_settings.caption
+msgid "&Settings"
+msgstr "&Einstellungen"
+
+#: tfrmmain.mm_settings.hint
+msgid "Open settings"
+msgstr "Einstellungen öffnen"
+
+#: tfrmmain.mm_shortcuts.caption
+msgid "&Shortcuts"
+msgstr "Ta&ststaturkürzel"
+
+#: tfrmmain.mm_skipstep.caption
+msgid "&Skip Step"
+msgstr "&Schritt abbrechen"
+
+#: tfrmmain.mm_skipstep.hint
+msgid "Abort the current step and continue with the next one"
+msgstr "Aktuellen Schritt abbrechen und mit nächstem fortfahren"
+
+#: tfrmmain.mm_stepedit.caption
+msgid "&Edit Stepfile"
+msgstr "Schrittdatei &ändern"
+
+#: tfrmmain.mm_stepload.caption
+msgid "&Load Stepfile"
+msgstr "Schrittdatei &laden"
+
+#: tfrmmain.mm_taskbarname.caption
+msgid "Set Taskbar &Name"
+msgstr "Fenster&überschift setzen"
+
+#: tfrmmain.pcprogram.hint
+msgid "Steps: Scripted charge and discharge  cycles"
+msgstr "Schritte: Script für gesteuerte Lade- und Entladezyklen"
+
+#: tfrmmain.ststepfile.caption
+msgid "(no file)"
+msgstr "(keine Datei)"
+
+#: tfrmmain.tbxmonitor.caption
+msgid "&Monitor"
+msgstr "&Monitor"
+
+#: tfrmmain.tbxmonitor.hint
+msgid "Toggle monitor mode, showing current voltage and current while not charging or discharging"
+msgstr "Umschalten Monitor-Mode, Anzeigen aktuelle Spannung/Strom wenn Laden/Entladen nicht aktiv ist"
+
+#: tfrmmain.tscharge.caption
+msgid "Char&ge"
+msgstr "&Laden"
+
+#: tfrmmain.tsconsole.caption
+msgid "Conso&le"
+msgstr "Konso&le"
+
+#: tfrmmain.tsdischarge.caption
+msgid "D&ischarge"
+msgstr "&Entladen"
+
+#: tfrmmain.tsprogram.caption
+msgid "Ste&ps"
+msgstr "Schri&tte"
+
+#: tfrmsettings.cancelbutton.caption
+msgctxt "tfrmsettings.cancelbutton.caption"
+msgid "Cancel"
+msgstr "Abbrechen"
+
+#: tfrmsettings.caption
+msgctxt "tfrmsettings.caption"
+msgid "Settings"
+msgstr "Einstellungen"
+
+#: tfrmsettings.cgsettings.caption
+msgid "&Misc settings"
+msgstr "&Weitere Einstellungen"
+
+#: tfrmsettings.edtinttime.editlabel.caption
+msgid "&dVdA Int. time (s)"
+msgstr "&dVdA Int. Zeit (s)"
+
+#: tfrmsettings.grpparam.caption
+msgid "Parameters"
+msgstr "Parameter"
+
+#: tfrmsettings.okbutton.caption
+msgctxt "tfrmsettings.okbutton.caption"
+msgid "&Ok"
+msgstr "&Ok"
+
+#: tfrmsettings.rgstart.caption
+msgid "&Startup behavior"
+msgstr "&Startverhalten"
+
+#: tfrmshortcuts.caption
+#, fuzzy
+msgctxt "tfrmshortcuts.caption"
+msgid "Shortcut keys"
+msgstr "Tastaturkürzel"
+
+#: tfrmstep.caption
+#, fuzzy
+msgctxt "tfrmstep.caption"
+msgid "Unsaved"
+msgstr "nicht gespeichert"
+
+#: tfrmstep.edtdevicelabel.caption
+msgid "Devic&e:"
+msgstr "&Port:"
+
+#: tfrmstep.menuitem1.caption
+msgctxt "tfrmstep.menuitem1.caption"
+msgid "&File"
+msgstr "&Datei"
+
+#: tfrmstep.menuitem10.caption
+msgid "NiCd"
+msgstr ""
+
+#: tfrmstep.menuitem11.caption
+msgid "NiMH"
+msgstr ""
+
+#: tfrmstep.menuitem12.caption
+msgid "LiPo"
+msgstr ""
+
+#: tfrmstep.menuitem13.caption
+msgid "LiFePO4"
+msgstr ""
+
+#: tfrmstep.menuitem14.caption
+msgid "Lead Acid"
+msgstr ""
+
+#: tfrmstep.menuitem15.caption
+msgid "CCCV"
+msgstr ""
+
+#: tfrmstep.menuitem16.caption
+msgid "Wait"
+msgstr ""
+
+#: tfrmstep.menuitem17.caption
+msgid "Loop"
+msgstr ""
+
+#: tfrmstep.menuitem7.caption
+msgid "&Add"
+msgstr ""
+
+#: tfrmstep.menuitem8.caption
+msgid "CC discharge"
+msgstr ""
+
+#: tfrmstep.menuitem9.caption
+msgid "CP discharge"
+msgstr ""
+
+#: tfrmstep.mniexit.caption
+msgid "&Exit"
+msgstr "&Beenden"
+
+#: tfrmstep.mninew.caption
+msgid "&New"
+msgstr "&Neu"
+
+#: tfrmstep.mniopen.caption
+msgid "&Open"
+msgstr "&Öffnen"
+
+#: tfrmstep.mnisave.caption
+msgid "&Save"
+msgstr "&Speichern"
+
+#: tfrmstep.mnisaveas.caption
+msgid "Save &As..."
+msgstr "Speichern &unter..."
+
+#: tfrmstep.okbutton.caption
+msgctxt "tfrmstep.okbutton.caption"
+msgid "&Ok"
+msgstr ""
