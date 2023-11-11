@@ -6,7 +6,8 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, StdCtrls, Menus,
-  SynEdit, SynHighlighterAny, lineparser, LCLType, ExtCtrls, ActnList, ComCtrls, SynEditTypes;
+  SynEdit, SynHighlighterAny, lineparser, LCLType, ExtCtrls, ActnList, ComCtrls, SynEditTypes,
+  stepadd_loop;
 
 const
   cNaN = 10E999;
@@ -88,7 +89,7 @@ type
     mniSave: TMenuItem;
     mniSaveAs: TMenuItem;
     mniExit: TMenuItem;
-    MenuItem7: TMenuItem;
+    mniAdd: TMenuItem;
     MenuItem8: TMenuItem;
     MenuItem9: TMenuItem;
     N1: TMenuItem;
@@ -109,6 +110,8 @@ type
     procedure mniOpenClick(Sender: TObject);
     procedure mniSaveClick(Sender: TObject);
     procedure mniSaveAsClick(Sender: TObject);
+    procedure mni_AddLoopClick(Sender: TObject);
+    procedure mni_AddWaitClick(Sender: TObject);
   private
     fModel : integer;
     FCompiled: Boolean;
@@ -120,6 +123,7 @@ type
     property fileName: string read fCurrFileName;
     procedure SetInitialDir(ADir: string);
     function loadFile(afileName : string) : boolean;
+    procedure LoadResourceStrings;
   end;
 
 var
@@ -143,6 +147,13 @@ Resourcestring
   cDescNote                    = 'Note: A20 and A40 requires charging voltage (chargers have no presets like A5 and A10), may be set via ini file e.g. for LiPo';
   cMinutes                     = 'minutes';
   cUnsaved                     = 'Unsaved';
+  cCapcity                     = 'capacity';
+  cEnergy                      = 'energy';
+  cCurrent                     = 'current';
+  cAddWait                     = 'Add wait';
+  cWaitTime                    = 'Wait time in seconds:';
+  cInvalidInteger              = 'Invalid integer number: %s';
+  cExamples                    = 'Examples:';
 
 implementation
 
@@ -508,6 +519,8 @@ var
   i : integer;
   c,d : TStringList;
   HelpText : String;
+  mNew : TMenuItem;
+  s : string;
 begin
   memStep.ReadOnly:=true;
   memStep.HighLighter := NIL;
@@ -577,29 +590,47 @@ Note: A20 and A40 requires charging voltage (chargers have no presets like A5 an
         Memo1.Lines.Add (HelpText);
      end;
 
+     s := cExamples;
+     while(length(s)) < 11 do s := s + ' ';
      Memo1.Lines.Add('Wait:      Wait t ('+cMinutes+')');
      Memo1.Lines.Add('Loop:      Loop [CapI|EneI] n - run steps n more times. CapI/EneI - run as long dis. capacity increases');
-     Memo1.Lines.Add('Cutoffs:   [c/d] CutA=current(A) CutC=capacity(Ah) Energy=energy(Wh) Time=(minutes) CutAt=('+cMinutes+')');
-     Memo1.Lines.Add('Examples:  c_'+c[0]+' Cells=4 Curr=0.75 CutA=0.2 Time=180');
+     Memo1.Lines.Add('Cutoffs:   [c/d] CutA='+cCurrent+'(A) CutC='+cCapcity+'(Ah) Energy='+cEnergy+'(Wh) Time=('+cMinutes+') CutAt=('+cMinutes+')');
+     Memo1.Lines.Add(s+'c_'+c[0]+' Cells=4 Curr=0.75 CutA=0.2 Time=180');
      Memo1.Lines.Add('           d_CR Res=10 CutV=2.8 Energy=6 Time=360');
      Memo1.Lines.Add(cDescNote);
+
+     // clear add menu
+     while mniAdd.Count > 0 do
+       mniAdd.delete(0);
+     // create add menu entries for charge
+     for i := 0 to c.Count-1 do
+     begin
+       mNew := TMenuItem.Create(Self);
+       mNew.Caption := 'c_'+c[i];
+       mniAdd.Add(mNew);
+     end;
+     mNew := TMenuItem.Create(Self); mNew.Caption := '-'; mniAdd.Add(mNew);
+     for i := 0 to d.Count-1 do
+     begin
+       mNew := TMenuItem.Create(Self);
+       mNew.Caption := 'd_'+d[i];
+       mniAdd.Add(mNew);
+     end;
+     mNew := TMenuItem.Create(Self); mNew.Caption := '-'; mniAdd.Add(mNew);
+
+     mNew := TMenuItem.Create(Self); mNew.Caption := '&Wait'; mNew.OnClick := @mni_AddWaitClick; mniAdd.Add(mNew);
+     mNew := TMenuItem.Create(Self); mNew.Caption := '&Loop'; mNew.OnClick := @mni_AddLoopClick; mniAdd.Add(mNew);
 
   finally
     c.free; d.free;
   end;
-  {C_AC
-C_CCCV
-C_LIFE
-C_LIPO
-C_NICD
-C_NIMH
-C_PB
-D_CC
-D_CP
-D_CR
-LOOP
-WAIT
-}
+
+end;
+
+
+procedure TfrmStep.LoadResourceStrings;
+begin
+  edtDeviceChange(self);
 end;
 
 procedure TfrmStep.memStepChange(Sender: TObject);
@@ -666,6 +697,44 @@ begin
     fcurrFileName := '';
     frmStep.Caption := cUnsaved;
     sdSave.FileName := '';
+  end;
+end;
+
+procedure TfrmStep.mni_AddLoopClick(Sender: TObject);
+var f : TfrmStepAdd_Loop;
+    s : string;
+begin
+  f := NIL;
+  try
+    f := TfrmStepAdd_Loop.Create(application);
+    if f.ShowModal = mrOk then
+      if f.edtLoopCount.Value > 0 then
+      begin
+        s := 'loop ';
+        if f.chkCapIEneI.Checked then s := s + 'enei ';
+        s := s + IntToStr(f.edtLoopCount.Value);
+        memStep.Lines.Add(s);
+      end;
+  finally
+    f.free;
+  end;
+end;
+
+procedure TfrmStep.mni_AddWaitClick(Sender: TObject);
+var s : string;
+    i : integer;
+begin
+  s := '1';
+  if InputQuery(cAddWait, cWaitTime, s) then
+  begin
+    try
+      i := StrToInt(s);
+      if i > 0 then
+        memStep.Lines.Add('wait '+s);
+    except
+      on e:exception do
+        Application.MessageBox(pchar(format(cInvalidInteger,[s])),pchar(cError),MB_ICONSTOP);
+    end;
   end;
 end;
 

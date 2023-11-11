@@ -17,6 +17,7 @@ type
     IpHtmlPanel1: TIpHtmlPanel;
     TopPannel: TPanel;
     BottomPannel: TPanel;
+    procedure LoadResourceStrings;
     procedure FormCreate(Sender: TObject);
     procedure IpHtmlPanel1HotClick(Sender: TObject);
     procedure IpHtmlPanel1HotURL(Sender: TObject; const URL: String);
@@ -35,22 +36,54 @@ implementation
 
 uses main;
 
+Resourcestring
+  cWhatAmI  = 'A GUI Software for Linux (and Windows) to control ZTE Tech EBC series battery testers and electronic loads intailly written by %s';
+  cEnhanced = 'This version %s supports the A20 as well as the A40.';
+  cEnhancedVersion = 'enhanced version';
+  cVersion         = 'Version';
+  cCompileDate     = 'Compiled';
+  cFPCVersion      = 'FPC Version';
+  cLazarusVersion  = 'Lazarus Version';
+
+
 { TfrmAbout }
+
+procedure TfrmAbout.LoadResourceStrings;
+var VersionInfo : array[0..3] of string;
+    maxLen,i,j,k : integer;
+begin
+  maxLen := 0;
+  VersionInfo[0] := cVersion;
+  VersionInfo[1] := cCompileDate;
+  VersionInfo[2] := cFPCVersion;
+  VersionInfo[3] := cLazarusVersion;
+  for i := low(VersionInfo) to high(VersionInfo) do
+    if Length(VersionInfo[i]) > maxLen then maxLen := Length(VersionInfo[i]);
+  inc(maxLen);
+  for i := low(VersionInfo) to high(VersionInfo) do
+  begin
+    j := maxLen - Length(VersionInfo[i]);
+    for k := 1 to j do
+      VersionInfo[i] := VersionInfo[i] + '&nbsp;';
+  end;
+
+  IpHtmlPanel1.SetHtmlFromStr(Format(
+  '<html><head>'+
+     '<title>'+Caption+'</title>'+
+     '</head><body>'+
+     '<h1>EBC-Controller</h1>'+
+     '<p>'+Format(cWhatAmI,['<a href="https://github.com/JOGAsoft/EBC-controller">JOGAsoft</a>'])+'</p>'+
+     '<p>'+Format(cEnhanced,['<a href="https://github.com/ardiehl/EBC-controller">'+cEnhancedVersion+'</a>'])+'</p>'+
+     '<tt>'+VersionInfo[0]+': '+cVersion+'</tt><br>'+
+     '<tt>'+VersionInfo[1]+': ' + {$I %DATE%} + ' ' + {$I %TIME%} + '</tt><br>' +
+     '<tt>'+VersionInfo[2]+': '+  {$I %FPCVERSION%} + '</tt><br>'+
+     '<tt>'+VersionInfo[3]+': %s</tt>' +
+     '</body></html>',[laz_version]));
+end;
 
 procedure TfrmAbout.FormCreate(Sender: TObject);
 begin
-  IpHtmlPanel1.SetHtmlFromStr(Format(
-  '<html><head>'+
-     '<title>About</title>'+
-     '</head><body>'+
-     '<h1>EBC-Controller</h1>'+
-     '<p>A GUI Software for Linux (and Windows) to control ZTE Tech EBC series battery testers and electronic loads intailly written by <a href="https://github.com/JOGAsoft/EBC-controller">JOGAsoft</a></p>'+
-     '<p>This <a href="https://github.com/ardiehl/EBC-controller">enhanced version</a> supports the A20 as well as the A40.</p>'+
-     '<tt>Version &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : '+cVersion+'</tt><br>'+
-     '<tt>Compiled &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: ' + {$I %DATE%} + ' ' + {$I %TIME%} + '</tt><br>' +
-     '<tt>FPC Version &nbsp;&nbsp;&nbsp;: '+  {$I %FPCVERSION%} + '</tt><br>'+
-     '<tt>Lazarus Version: %s</tt>' +
-     '</body></html>',[laz_version]));
+  LoadResourceStrings;
 end;
 
 procedure TfrmAbout.IpHtmlPanel1HotClick(Sender: TObject);

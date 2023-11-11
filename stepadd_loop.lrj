@@ -1,0 +1,7 @@
+{"version":1,"strings":[
+{"hash":174535184,"name":"tfrmstepadd_loop.caption","sourcebytes":[65,100,100,32,108,111,111,112],"value":"Add loop"},
+{"hash":202559882,"name":"tfrmstepadd_loop.lblcapienei.caption","sourcebytes":[38,67,97,112,73,47,69,110,101,73,58],"value":"&CapI/EneI:"},
+{"hash":70640474,"name":"tfrmstepadd_loop.lblloopcount.caption","sourcebytes":[38,76,111,111,112,32,99,111,117,110,116,58],"value":"&Loop count:"},
+{"hash":77089212,"name":"tfrmstepadd_loop.cancelbutton.caption","sourcebytes":[67,97,110,99,101,108],"value":"Cancel"},
+{"hash":11099,"name":"tfrmstepadd_loop.okbutton.caption","sourcebytes":[38,79,107],"value":"&Ok"}
+]}

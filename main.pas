@@ -5,12 +5,12 @@ unit main;
 interface
 
 uses
-  Classes, SysUtils, Forms, Controls, Graphics, Dialogs, StdCtrls,
-  EditBtn, ComCtrls, Menus, Buttons, ActnList, TAGraph, TASeries,
-  Grids, TAIntervalSources, TATransformations, TATools, LazSerial, DateUtils,
-  TACustomSeries, SynEdit, StepForm, MyIniFile, JLabeledIntegerEdit, math,
-  JLabeledFloatEdit, settings, typinfo, types, lcltype, connectform, aboutform, ExtCtrls,
-  shortcuthelpform, LCLTranslator, i18nutils;
+  Classes, SysUtils, Forms, Graphics, Dialogs, StdCtrls, EditBtn,
+  ComCtrls, Menus, Buttons, ActnList, TAGraph, TASeries, Grids,
+  TAIntervalSources, TATransformations, TATools, LazSerial,
+  DateUtils, TACustomSeries, SynEdit, StepForm, MyIniFile, math, settings,
+  typinfo, types, lcltype, connectform, aboutform, ExtCtrls, shortcuthelpform,
+  LCLTranslator, Spin, i18nutils, Controls;
 
 const
 {$ifdef Windows}
@@ -104,7 +104,6 @@ const
   cDischargeIndex = 'DischargeIndex';
   cStartSelection = 'StartSelection';
   cSelection = 'Selection';
-  cProgFile = 'ProgFile';
   cChkSetting = 'CheckSetting';
   cSettings = 'Settings';
   cConf = '.conf';
@@ -114,12 +113,16 @@ const
   cSaveDir  = 'SaveDir-Win';
   cLogDir   = 'LogDir-Win';
   cStepDir  = 'StepFileDir-Win';
+  cProgFile = 'ProgFile-Win';
+  cSerial   = 'Serial-Win';
 {$else}
   cSaveDir  = 'SaveDir';
   cLogDir   = 'LogDir';
   cStepDir  = 'StepFileDir';
+  cProgFile = 'ProgFile';
+  cSerial   = 'Serial';
 {$endif}
-
+  cLangCode = 'Lang';
   cTabIndex = 'TabIndex';
   cReadOnly = 'ReadOnly';
   cMonitor  = 'Monitor';
@@ -134,11 +137,7 @@ const
   cAppSec = 'Application';
   cMemStepLogHeight = 'MemStepLogHeight';
   cMemStepLogWidths = 'MemStepLogWidths';
-{$ifdef Windows}
-  cSerial = 'Serial-Win';
-{$else}
-  cSerial = 'Serial';
-{$endif}
+
 
 Resourcestring
   cFileExists              = 'File Exists';
@@ -186,6 +185,7 @@ Resourcestring
   cConnecting              = 'Connecting...';
   cNotConnected            = 'Not connected';
   cConnected               = 'Connected';
+  cCopyError               = 'unable to copy'+sLineBreak+'%s'+sLineBreak+'to'+sLineBreak+'%s';
 
 
 
@@ -294,19 +294,24 @@ type
     chkCutCap: TCheckBox;
     chkCutEnergy: TCheckBox;
     edtDelim: TEdit;
+    edtTestVal: TFloatSpinEdit;
+    edtCutEnergy: TFloatSpinEdit;
+    edtCutCap: TFloatSpinEdit;
+    edtCutV: TFloatSpinEdit;
+    edtChargeV: TFloatSpinEdit;
+    edtCutA: TFloatSpinEdit;
     gbSettings: TGroupBox;
-    edtCells: TJLabeledIntegerEdit;
-    edtCutA: TJLabeledFloatEdit;
-    edtCutM: TJLabeledIntegerEdit;
-    edtTestVal: TJLabeledFloatEdit;
-    edtCutCap: TJLabeledFloatEdit;
-    edtCutTime: TJLabeledIntegerEdit;
-    edtCutEnergy: TJLabeledFloatEdit;
-    edtCutV: TJLabeledFloatEdit;
-    edtChargeV: TJLabeledFloatEdit;
     gbStatus: TGroupBox;
     Label1: TLabel;
     Label2: TLabel;
+    Label3: TLabel;
+    lblCutA: TLabel;
+    lblChargeV: TLabel;
+    lblCells: TLabel;
+    lblCutCap2: TLabel;
+    lblCutEnergy2: TLabel;
+    lblCutTime: TLabel;
+    lblTestVal: TLabel;
     lblCapI: TLabel;
     lblProgTime: TLabel;
     Label10: TLabel;
@@ -318,11 +323,9 @@ type
     lblStepNum: TLabel;
     lblTestUnit: TLabel;
     ChartAxisTransformationsCurrent: TChartAxisTransformations;
-
-      ChartAxisTransformationsCurrentAutoScaleAxisTransform: TAutoScaleAxisTransform;
+    ChartAxisTransformationsCurrentAutoScaleAxisTransform: TAutoScaleAxisTransform;
     ChartAxisTransformationsVoltage: TChartAxisTransformations;
-
-      ChartAxisTransformationsVoltageAutoScaleAxisTransform: TAutoScaleAxisTransform;
+    ChartAxisTransformationsVoltageAutoScaleAxisTransform: TAutoScaleAxisTransform;
     DateTimeIntervalChartSource: TDateTimeIntervalChartSource;
     lblTimer: TLabel;
     lsCurrent: TLineSeries;
@@ -371,6 +374,9 @@ type
     shaCapI: TShape;
     MainStatusBar: TStatusBar;
     ChartStepSplitter: TSplitter;
+    edtCutTime: TSpinEdit;
+    edtCells: TSpinEdit;
+    edtCutM: TSpinEdit;
     stStepFile: TStaticText;
     ReconnectTimer: TTimer;
     ConnectionWatchdogTimer: TTimer;
@@ -382,7 +388,16 @@ type
     tsDischarge: TTabSheet;
     Serial: TLazSerial;
     procedure ConnectionWatchdogTimerTimer(Sender: TObject);
+    procedure edtCellsChange(Sender: TObject);
+    procedure edtCellsClick(Sender: TObject);
+    procedure edtCellsEditingDone(Sender: TObject);
+    procedure edtCellsKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure edtCellsKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure edtCellsExit(Sender: TObject);
+    procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure mm_AboutClick(Sender: TObject);
+    procedure FinalizeLanguageSettings;
+    procedure SetLanguage(langCode : string);
     procedure mm_langClick(Sender: TObject);
     procedure mm_AutoCsvFileNameClick(Sender: TObject);
     procedure mm_AutoLogClick(Sender: TObject);
@@ -407,20 +422,11 @@ type
     procedure btnStopClick(Sender: TObject);
     procedure chkCutCapChange(Sender: TObject);
     procedure chkCutEnergyChange(Sender: TObject);
-    procedure edtCellsChange(Sender: TObject);
-    procedure edtCellsClick(Sender: TObject);
-    procedure edtCellsEditingDone(Sender: TObject);
-    procedure edtCellsExit(Sender: TObject);
-    procedure edtCellsKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
-    procedure edtCellsKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
+
     procedure edtCutTimeChange(Sender: TObject);
     procedure FormClose(Sender: TObject; var CloseAction: TCloseAction);
     procedure FormCreate(Sender: TObject);
-    procedure memLogChange(Sender: TObject);
-    procedure mniLoadStepClick(Sender: TObject);
-    procedure mniSaveCSVClick(Sender: TObject);
-    procedure mniSavePNGClick(Sender: TObject);
-    procedure mniSetNameClick(Sender: TObject);
+
     procedure rgChargeClick(Sender: TObject);
     procedure rgDischargeClick(Sender: TObject);
     procedure MainStatusBarDrawPanel(StatusBar: TStatusBar; Panel: TStatusPanel;
@@ -480,6 +486,7 @@ type
     FDeltaIndex: Integer;
     FIntTime: Integer;
     FConnectRetryCountdown: Integer;
+    fLanguageCode: String;
     procedure DoHexLog(AText: string);
 
     procedure SerialRec(Sender: TObject);
@@ -767,6 +774,8 @@ begin
             setStatusLine(cst_ConnectionStatus,cConnected);
             setStatusLine(cst_ConnectedModel,FModels[FModel].Name);
             tbxMonitor.Enabled := True;
+            rgCharge.Enabled := True;
+            rgDischarge.Enabled := True;
             FConnState := csConnected;
             FUFactor := FModels[FModel].UFactor;
             FIFactor := FModels[FModel].IFactor;
@@ -1443,6 +1452,7 @@ begin
   end;
 end;
 
+
 function TfrmMain.MakeConnPacket(SendMode: TSendMode): string;
 begin
   Result := '';
@@ -1588,10 +1598,10 @@ begin
     Result := MyFloatStr(ACharge) + 'Ah';
 end;
 
+
+
 procedure TfrmMain.FreezeEdits;
 begin
-  rgCharge.Enabled := False;
-  rgDischarge.Enabled := False;
   edtCells.Enabled := False;
   edtChargeV.Enabled := False;
   edtCutA.Enabled := False;
@@ -1603,6 +1613,8 @@ begin
   edtCutCap.Enabled := False;
   chkCutCap.Enabled := False;
   edtCutV.Enabled := False;
+  rgCharge.Enabled := False;
+  rgDischarge.Enabled := False;
   frmSettings.edtIntTime.Enabled := False;
 end;
 
@@ -1632,7 +1644,7 @@ begin
   begin
     edtChargeV.Enabled:=false;
     edtCells.Enabled := True;
-    //edtChargeV.Value := edtCells.Value * FPackets[I].VoltInfo;
+    //edtChargeV.Value := dtCells.Value * FPackets[I].VoltInfo;
   end;
 end;
 
@@ -1691,11 +1703,6 @@ begin
 end;
 
 procedure TfrmMain.LogStep;
-{var
-  I: Integer;
-  s: string;
-  col: array [2..High(cCol)] of string;
-}
 begin
   if not FInProgram then exit;
 
@@ -1794,6 +1801,7 @@ begin
   edtCutTime.Value := ini.ReadInteger(s, cMaxTime, 0);
   edtCutM.Value := ini.ReadInteger(s, cCutATime, 0);
 
+  fLanguageCode := ini.ReadString(cSettings,cLangCode, '');
   frmSettings.edtProgFile.Text := ini.ReadString(cSettings, cProgFile, '');
   sdCSV.InitialDir := ini.ReadString(cSettings, cSaveDir, FAppDir);
   sdPNG.InitialDir := sdCSV.InitialDir;
@@ -1851,6 +1859,7 @@ begin
 
   ini.Free;
   SetSettings;
+  if length(fLanguageCode) > 0 then SetLanguage(fLanguageCode);
 end;
 
 procedure TfrmMain.SaveSettings;
@@ -1885,6 +1894,7 @@ begin
     ini.WriteInteger(s, cMaxTime, edtCutTime.Value);
     ini.WriteInteger(s, cCutATime, edtCutM.Value);
   end;
+  ini.WriteString(cSettings, cLangCode, fLanguageCode);
   ini.WriteString(cSettings, cProgFile, frmSettings.edtProgFile.Text);
   ini.WriteString(cSettings, cSaveDir, sdCSV.InitialDir);
   ini.WriteString(cSettings, cLogDir, sdLogCSV.InitialDir);
@@ -1975,27 +1985,27 @@ begin
     case FPackets[APacket].TestVal of
       tvCurrent:
       begin
-        edtTestVal.EditLabel.Caption := cCurrent;
-        edtTestVal.EditLabel.Hint := cCurrentHint;
+        lblTestVal.Caption := cCurrent;
+        lblTestVal.Hint := cCurrentHint;
         lblTestUnit.Caption := cA;
       end;
       tvPower:
       begin
-        edtTestVal.EditLabel.Caption := cPower;
-        edtTestVal.EditLabel.Hint := cPowerHint;
+        lblTestVal.Caption := cPower;
+        lblTestVal.Hint := cPowerHint;
         lblTestUnit.Caption := cP;
       end;
       tvResistance:
       begin
-        edtTestVal.EditLabel.Caption := cResistance;
-        edtTestVal.EditLabel.Hint := cResistanceHint;
+        lblTestVal.Caption := cResistance;
+        lblTestVal.Hint := cResistanceHint;
         lblTestUnit.Caption := cR;
       end;
     end;
   end else
   begin
-    edtTestVal.EditLabel.Caption := cCurrent;
-    edtTestVal.EditLabel.Hint := cCurrentHint;
+    lblTestVal.Caption := cCurrent;
+    lblTestVal.Hint := cCurrentHint;
     lblTestUnit.Caption := cA;
   end;
 end;
@@ -2003,13 +2013,9 @@ end;
 procedure TfrmMain.DoLog(AText: string);
 begin
   if memLog.Lines.Count > 10000 then
-  begin
     memLog.Lines.Delete(0);
-  end;
   memLog.Lines.Add(AText);
-
   memLog.VertScrollBar.Position := 1000000;
-//  SendMessage(memLog.Handle, WM_VSCROLL, SB_BOTTOM, 0);
 end;
 
 
@@ -2292,7 +2298,7 @@ begin
             if Pos(cCmdCCCV, Command) > 0 then   // AD: FIXME
               edtChargeV.Value := CV
             else
-              edtCells.Value := Trunc(P2);
+              dtCells.Value := Trunc(P2);
             }
           end else if Mode in [rmDischarging, rmDischargingCR] then
             edtCutV.Value := CutVolt;
@@ -2379,6 +2385,7 @@ begin
       MainStatusBar.invalidate;
       ConnectionWatchdogTimer.Enabled := false;
       btnStart.Enabled := False;
+      FreezeEdits;
     end;
   except
     FConnState := csNone;
@@ -2423,10 +2430,25 @@ begin
   end;
 end;
 
+procedure TfrmMain.FinalizeLanguageSettings;
+begin
+  frmShortcuts.setHelpText(Self);
+  frmSettings.LoadRecourcestrings;
+  frmStep.LoadResourceStrings;
+  FixLabels(-1);  // fixme
+end;
+
+procedure TfrmMain.SetLanguage(langCode : string);
+begin
+  fLanguageCode := langCode;
+  i18nutils.SetLanguage(langCode);
+  FinalizeLanguageSettings;
+end;
+
 procedure TfrmMain.mm_langClick(Sender: TObject);
 begin
-  poSelectLanguageMenuClick(Sender);
-  frmShortcuts.setHelpText(Sender);
+  fLanguageCode := poSelectLanguageMenuClick(Sender);
+  FinalizeLanguageSettings;
 end;
 
 
@@ -2529,7 +2551,7 @@ end;
 
 procedure TfrmMain.pcProgramChange(Sender: TObject);
 begin
-  if (FInProgram) or (not (FRunMode in [rmNone,rmMonitor])) then
+  if (FInProgram) or (not (FRunMode in [rmNone,rmMonitor])) or (fConnState <> csConnected) then
   begin
     btnStart.Enabled := false;
     exit;
@@ -2740,15 +2762,14 @@ begin
   end;
 end;
 
+
 procedure TfrmMain.edtCellsChange(Sender: TObject);
 var
   I: Integer;
 begin
   I := GetPointer(rgCharge);
   if I > -1 then
-  begin
     edtChargeV.Value := edtCells.Value * FPackets[I].VoltInfo;
-  end;
 end;
 
 procedure TfrmMain.edtCellsClick(Sender: TObject);
@@ -2764,6 +2785,18 @@ end;
 procedure TfrmMain.edtCellsExit(Sender: TObject);
 begin
     edtCellsChange(Sender)
+end;
+
+procedure TfrmMain.FormKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  if (Shift = [ssCtrl]) then
+    case key of
+      VK_F1: pcProgram.ActivePage :=tsCharge;
+      VK_F2: pcProgram.ActivePage :=tsDischarge;
+      VK_F3: pcProgram.ActivePage :=tsProgram;
+      VK_F4: pcProgram.ActivePage :=tsConsole;
+    end;
 end;
 
 procedure TfrmMain.edtCellsKeyDown(Sender: TObject; var Key: Word;
@@ -2802,6 +2835,7 @@ const
 var
   I: Integer;
   N: Integer;
+  newTop : integer;
 //  A: TAction;
 begin
   SetRunMode(rmNone);
@@ -2883,7 +2917,7 @@ begin
   begin
     if not TextFileCopy(ChangeFileExt(Application.ExeName, cInit), FConfFile) then
     begin
-      FatalError(Format('unable to copy'+sLineBreak+'%s'+sLineBreak+'to'+sLineBreak+'%s',[ChangeFileExt(Application.ExeName, cInit),FConfFile]));
+      FatalError(Format(cCopyError,[ChangeFileExt(Application.ExeName, cInit),FConfFile]));
       exit;
     end;
   end;
@@ -2893,6 +2927,7 @@ begin
 //  SetSettings;
 
   OffSetting;
+  FreezeEdits;
   rgCharge.OnClick := @rgChargeClick;
   rgDischarge.OnClick := @rgDischargeClick;
   btnStart.Enabled := False;
@@ -2901,6 +2936,7 @@ begin
   FRecvStatusIndicatorInc := 1;
   FRecvStatusIndicatorInc := -1;
   frmStep.setDevice('');
+
   {$ifdef windows}
   MemStepLog.Font.Name := cFixedFont;
   MemLog.Font.Name := cFixedFont;
@@ -2908,39 +2944,40 @@ begin
   //     gbSettings are shown with some offset
   //     in Y on Windows (Lazarus 3.0RC2)
   //     so move them up
-  for i :=0 to gbSettings.ControlCount-1 do
+  {for i :=0 to gbSettings.ControlCount-1 do
     if gbSettings.Controls[i] is TControl then
       with TControl(gbSettings.Controls[i]) do
-        Top := Top - 16;
+        Top := Top - 16;}
   {$endif}
 
+  // the edit boxes are different in height on Windows and Linux
+  // anchoring will not allign correct so do it here
+
+  newTop := edtTestVal.Top + edtTestVal.Height + 4;
+  lblCutEnergy2.Top := newTop;
+  lblCutCap2.Top := newTop;
+  chkCutEnergy.Top := newTop;
+  chkCutCap.Top := newTop;
+
+  newTop := newTop + lblCutEnergy2.Height + 4;
+  edtCutEnergy.Top := newTop;
+  edtCutCap.Top := newTop;
+  newTop := newTop + (edtCutEnergy.Height div 2);
+  lblCutEnergy.Top := newTop;
+  lblCutCap.Top := newTop;
+
+  newTop := edtCutEnergy.Top + edtCutEnergy.Height + 4;
+  btnStart.Top := newTop;
+  btnStop.Top := newTop;
+  tbxMonitor.Top := newTop;
+  newTop := newTop + btnStart.Height;
+  btnCont.Top := newTop;
+  btnAdjust.Top := newTop;
+
+  // does not work under Windows ?
+  gbSettings.Height := tbxMonitor.Top + tbxMonitor.Height + 8;
+
   poGenerateLanguageSelectMenuEntries(mmm_Language, @mm_langClick);
-end;
-
-procedure TfrmMain.memLogChange(Sender: TObject);
-begin
-
-end;
-
-procedure TfrmMain.mniLoadStepClick(Sender: TObject);
-begin
-
-end;
-
-procedure TfrmMain.mniSaveCSVClick(Sender: TObject);
-begin
-
-end;
-
-
-procedure TfrmMain.mniSavePNGClick(Sender: TObject);
-begin
-
-end;
-
-procedure TfrmMain.mniSetNameClick(Sender: TObject);
-begin
-
 end;
 
 
@@ -2955,6 +2992,7 @@ begin
   I := GetPointer(rgCharge);
   if I >-1 then
   begin
+    UnlockEdits;
     if FPackets[I].Method = mChargeCV then
     begin
       btnStart.Enabled := True;
@@ -2992,6 +3030,7 @@ begin
   FixLabels(I);
   if (I > -1) {and (I <> FPacketIndex)} then
   begin
+    UnlockEdits;
     btnStart.Enabled := True;
     case FPackets[I].TestVal of
       tvCurrent:

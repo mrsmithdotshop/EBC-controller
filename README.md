@@ -15,35 +15,39 @@ among bug fixes additional features and fixes are:
 - moved popup menu to a traditional menu
 - added function keys
 - Hacks and fixes for Windows
+- Multi language support (currently English and German)
 ## What is this ?
-A GUI linux (as well as Windows) software to control the ZTE Tech EBC series
+A GUI software for linux (as well as Windows) to control the ZTE Tech EBC series
 battery testers and electronic loads A05, A10, A20 and A40.
+This version has been tested with the A20 and A40 only as i do not have an A05 or A10, testers are welcome.
 
 Written in Free Pascal/Lazarus.
 
-Needs TLazSerial and Jujibo packages.
+Needs TLazSerial package (to be removed).
 
 The aim is to provide the same or more functionallity as the Windows software
-from ZKE Tech. Supports the EBC-A05,EBC-A10H,A20 and A40 loads by default.
+from ZKE Tech (Except multiple devices from one instance but you can run
+multiple instances at the same time). Supports the EBC-A05,EBC-A10H,A20 and
+A40 devices by default.
 Other devices probably work. You can add the identification byte for
 any device in the .conf file (run the program once first to auto-generate
-the .conf file).
+the .conf file based on the .init file).
 
 Added features over the original software:
 * More versatile cut offs, such as current, capacity or energy
 * A software Constant Resistance (CR) mode
 * Better loop controls for cycling programs
-   (nestled loops, loops until capacity drops)
+   (nested loops, loops until capacity drops)
 * Shows more parameters (dV, dA, etc)
 
 ## Usage
-The Tabs Charge and Discharge are more or less self-explanatory, set the voltage and current and press start to activate.
+The Tabs Charge and Discharge are more or less self-explanatory, select the battery type amd set/adjust the voltage, current as well as other parameters and press start to activate.
 ### Steps
 Using steps you can perform several steps like
 `charge to a defined voltage using a defined current`
 `wait for some time`
 `discharge to a defined value e.g.  current or voltage`
 `loop for a defined number`
-Use F2 to load a step file or F12 to edit the loaded or a default stepfile.
+Use F3 to load a step file or Shift-F3 to edit the loaded or a default stepfile.
 
 

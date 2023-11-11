@@ -1,7 +1,7 @@
 object frmConnect: TfrmConnect
-  Left = 506
+  Left = 514
   Height = 118
-  Top = 507
+  Top = 539
   Width = 422
   BorderStyle = bsDialog
   Caption = 'Connect'
@@ -47,10 +47,10 @@ object frmConnect: TfrmConnect
     OnClick = OkButtonClick
   end
   object CancelButton: TButton
-    Left = 252
+    Left = 236
     Height = 27
     Top = 80
-    Width = 75
+    Width = 91
     Cancel = True
     Caption = 'Cancel'
     ModalResult = 2

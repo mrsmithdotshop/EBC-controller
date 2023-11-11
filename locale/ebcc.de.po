@@ -11,6 +11,36 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: Poedit 3.4\n"
 
+#: aboutform.ccompiledate
+msgid "Compiled"
+msgstr "Kompiliert"
+
+#: aboutform.cenhanced
+#, object-pascal-format
+msgid "This version %s supports the A20 as well as the A40."
+msgstr "Diese Version %s unterstützt auch den A20 und den A40."
+
+#: aboutform.cenhancedversion
+msgid "enhanced version"
+msgstr "erweiterte Version"
+
+#: aboutform.cfpcversion
+msgid "FPC Version"
+msgstr "FPC Version"
+
+#: aboutform.clazarusversion
+msgid "Lazarus Version"
+msgstr "Lazarus Version"
+
+#: aboutform.cversion
+msgid "Version"
+msgstr "Version"
+
+#: aboutform.cwhatami
+#, object-pascal-format
+msgid "A GUI Software for Linux (and Windows) to control ZTE Tech EBC series battery testers and electronic loads intailly written by %s"
+msgstr "Eine Grafische Benutzeroberfläche für Linux (und Windows) zur Steuerung der ZTE EBC Serie von Batterietestern. Die Software wurde ursprünglich von  %s  geschrieben."
+
 #: lineparser.ccommandexpected
 msgid "command expected"
 msgstr "Kommando erwartet"
@@ -97,6 +127,15 @@ msgstr "Verbindung wurde getrennt"
 msgid "Unable to connect - timeout"
 msgstr "Keine Verbindung möglich - Zeitüberschreitung"
 
+#: main.ccopyerror
+#, object-pascal-format
+msgid ""
+"unable to copy\n"
+"%s\n"
+"to\n"
+"%s"
+msgstr "Kann %s nicht in %s kopieren"
+
 #: main.ccurrent
 msgid "Current"
 msgstr "Strom"
@@ -113,12 +152,12 @@ msgstr "Abschaltstrom (%fA) ist größer oder gleich Ladestrom (%fA)"
 #: main.cdecodecorrentexception
 #, object-pascal-format
 msgid "DecodeCurrent raised %s (%2x%2x)"
-msgstr ""
+msgstr "DecodeCurrent Ausnahmefehler %s (%2x%2x)"
 
 #: main.cdecodevoltageexception
 #, object-pascal-format
 msgid "DecodeVoltage raised %s (%2x%2x)"
-msgstr ""
+msgstr "DecodeCurrent Ausnahmefehler %s (%2x%2x)"
 
 #: main.cdischargeampsexeeded
 #, object-pascal-format
@@ -185,12 +224,12 @@ msgstr "Keine Ladeprofil ausgewählt"
 #: main.cnoconnectpackage
 #, object-pascal-format
 msgid "There is no connect packet defined in configuration file (%s)"
-msgstr ""
+msgstr "Kein \"connect\" Paket definiert in der Konfigurationsdatei %s"
 
 #: main.cnodisconnectpackage
 #, object-pascal-format
 msgid "There is no disconnect packet defined in configuration file (%s)"
-msgstr ""
+msgstr "Kein \"disconnect\" Paket definiert in der Konfigurationsdatei %s"
 
 #: main.cnomodelsdefined
 #, object-pascal-format
@@ -224,11 +263,11 @@ msgstr "Widerstand"
 
 #: main.cresistancehint
 msgid "Set the charge/discharge current resistance in Ohm"
-msgstr ""
+msgstr "Wert für Laden/Entladen mit konstantem Widerstand"
 
 #: main.csetbordername
 msgid "Set border name"
-msgstr ""
+msgstr "Fensterüberschrift setzen"
 
 #: main.cstarted
 msgid "started"
@@ -240,7 +279,6 @@ msgid "unable to create step logfile %s (%d)"
 msgstr "Step-Logdatei konnte nicht angelegt werden %s (%d)"
 
 #: main.ctime
-#, fuzzy
 msgctxt "main.ctime"
 msgid "Time"
 msgstr "Zeit"
@@ -263,8 +301,55 @@ msgstr "unbekannt"
 msgid "View..."
 msgstr "Ansicht..."
 
+#: settings.cstautoload
+msgid "&Autoload program file"
+msgstr "Step-Datei &automatisch laden"
+
+#: settings.cstforcemon
+msgid "&Force monitor mode after cycle end"
+msgstr "Monitor-Mode nach beenden aktivieren"
+
+#: settings.cstignorecrc
+msgid "&Ignore CRC"
+msgstr "CRC &Ignorieren"
+
+#: settings.cstloadlastsettings
+msgid "Load last settings"
+msgstr "Letzte Einstellungen laden"
+
+#: settings.cstlogrecdata
+msgid "&Log received data to console"
+msgstr "Empfangende Daten in &Konsole anzeigen"
+
+#: settings.cstrememberautolog
+msgid "Remember &CSV file for automatic logging"
+msgstr "&CSV Dateiname für automatisches Logging speichern"
+
+#: settings.cstremembersavedir
+msgid "&Remember save directory"
+msgstr "Log-&Verzeichnis speichern"
+
+#: settings.cstrememberstepdir
+msgid "Remember s&tep file directory"
+msgstr "&Step-Datei Verzeichnis speichern"
+
+#: settings.csttaskbarcsvprefix
+msgid "use taskbar name as csv file name &prefix"
+msgstr "Taskbar Namen vor den csv Dateinamen stellen"
+
+#: settings.cstusedefaultsettings
+msgid "Use default settings"
+msgstr "Standardeinstellungen verwenden"
+
+#: settings.cstuseselection2
+msgid "Use selection 2"
+msgstr "Verwende Einstellung 2"
+
+#: settings.cstuseselection3
+msgid "Use selection 3"
+msgstr "Verwende Einstellung 3"
+
 #: shortcuthelpform.csk_connect
-#, fuzzy
 msgctxt "shortcuthelpform.csk_connect"
 msgid "Connect"
 msgstr "Verbinden"
@@ -278,7 +363,6 @@ msgid "Run"
 msgstr "Starten / Beenden"
 
 #: shortcuthelpform.csk_settings
-#, fuzzy
 msgctxt "shortcuthelpform.csk_settings"
 msgid "Settings"
 msgstr "Einstellungen"
@@ -300,6 +384,14 @@ msgstr "Tastaturkürzel"
 msgid "Values"
 msgstr "Werte"
 
+#: stepform.caddwait
+msgid "Add wait"
+msgstr "Wait hinzufügen"
+
+#: stepform.ccapcity
+msgid "capacity"
+msgstr "Kapazität"
+
 #: stepform.cchargecurrnotspecified
 msgid "Charge current not specified (curr=)"
 msgstr "Ladestrom (curr=) nicht spezifiziert"
@@ -312,6 +404,10 @@ msgstr "Ladespannung nicht im Script und nicht in der Conf-File angegeben (volt=
 msgid "Command expected"
 msgstr "Kommando erwartet"
 
+#: stepform.ccurrent
+msgid "current"
+msgstr "Strom"
+
 #: stepform.ccutoffcurrnotspecified
 msgid "Cutoff current not specified (cuta=)"
 msgstr "Abschaltstrom nicht angegeben (cuta=)"
@@ -320,9 +416,22 @@ msgstr "Abschaltstrom nicht angegeben (cuta=)"
 msgid "Note: A20 and A40 requires charging voltage (chargers have no presets like A5 and A10), may be set via ini file e.g. for LiPo"
 msgstr "Hinweis: A20 und A40 benötigen Ladespannung (diese haben keine Voreinstellungen wie A5 und 10), kann auch in der ini-Datei, z.B. für LiPo angegeben werden"
 
+#: stepform.cenergy
+msgid "energy"
+msgstr "Energie"
+
 #: stepform.cerrorinscriptfile
 msgid "Error in script file"
 msgstr "Fehler in Scriptdatei"
+
+#: stepform.cexamples
+msgid "Examples:"
+msgstr "Beispiele:"
+
+#: stepform.cinvalidinteger
+#, object-pascal-format
+msgid "Invalid integer number: %s"
+msgstr "%s ist keine gültige ganze Zahl"
 
 #: stepform.clinecolmessage
 #, object-pascal-format
@@ -369,17 +478,20 @@ msgctxt "stepform.cunsaved"
 msgid "Unsaved"
 msgstr "Nicht gespeichert"
 
+#: stepform.cwaittime
+msgid "Wait time in seconds:"
+msgstr "Wartezeit in Sekunden:"
+
 #: tfrmabout.button1.caption
 msgctxt "tfrmabout.button1.caption"
 msgid "Ok"
-msgstr ""
+msgstr "Ok"
 
 #: tfrmabout.caption
 msgid "About"
 msgstr "Über"
 
 #: tfrmconnect.cancelbutton.caption
-#, fuzzy
 msgctxt "tfrmconnect.cancelbutton.caption"
 msgid "Cancel"
 msgstr "Abbrechen"
@@ -396,7 +508,7 @@ msgstr "&Port"
 #: tfrmconnect.okbutton.caption
 msgctxt "tfrmconnect.okbutton.caption"
 msgid "Ok"
-msgstr ""
+msgstr "Ok"
 
 #: tfrmmain.btnadjust.caption
 msgid "Adjust"
@@ -407,7 +519,6 @@ msgid "Cont"
 msgstr ""
 
 #: tfrmmain.btnprog.caption
-#, fuzzy
 msgctxt "tfrmmain.btnprog.caption"
 msgid "Edit..."
 msgstr "Bearbeiten..."
@@ -453,65 +564,21 @@ msgstr "Zeit"
 msgid "[A]"
 msgstr "[A]"
 
-#: tfrmmain.edtcells.editlabel.caption
-msgid "Ce&lls"
-msgstr "Z&ellen"
-
-#: tfrmmain.edtcells.hint
-msgid "Number of cells, charge and cutoff voltage will be multiplied by the number of cells"
-msgstr "Anzahl Zellen, Lade- und Endladespannung wird mit der Zellenanzahl multipliziert"
-
-#: tfrmmain.edtchargev.editlabel.caption
-msgid "&Voltage"
-msgstr "&Spannung"
-
-#: tfrmmain.edtcuta.editlabel.caption
-msgid "C&utoff current (A)"
-msgstr "Endstrom (A)"
-
 #: tfrmmain.edtcuta.hint
-msgid "If the charge current will be lower than the charge current, charging will be stopped"
-msgstr ""
-
-#: tfrmmain.edtcutcap.editlabel.caption
-msgid "Cutoff capacity"
-msgstr "Endkapazität"
+msgid "If the charge current will be lower than the cutoff current, charging will be stopped"
+msgstr "Beenden wenn der Ladestrom  den angegebenen Endstrom unterschreitet"
 
 #: tfrmmain.edtcutcap.hint
 msgid "End charge/discharge after the specified energy in AH has been put into  or get from the battery"
-msgstr ""
-
-#: tfrmmain.edtcutenergy.editlabel.caption
-msgid "Cutoff energ&y"
-msgstr ""
+msgstr "Laden/Entladen beenden wenn die angegebene Energie in AH erreicht ist"
 
 #: tfrmmain.edtcutenergy.hint
 msgid "End charge/discharge after the specified energy in WH has been put into or get from the battery"
-msgstr ""
-
-#: tfrmmain.edtcutm.editlabel.caption
-msgid " "
-msgstr ""
-
-#: tfrmmain.edtcutm.hint
-msgid "Delays the end of charge after the cutoff current is reached"
-msgstr "Verzögert das Ende der Ladung nachdem der Endstrom erreicht wurde"
-
-#: tfrmmain.edtcuttime.editlabel.caption
-msgid "Max time (min)"
-msgstr "Max Zeit (Min)"
-
-#: tfrmmain.edtcutv.editlabel.caption
-msgid "Cutoff Voltage"
-msgstr "Endspannung"
+msgstr "Laden/Entladen beenden wenn die angegebene Energie in WH erreicht ist"
 
 #: tfrmmain.edtdelim.text
 msgid "|"
 msgstr "|"
-
-#: tfrmmain.edttestval.editlabel.caption
-msgid "TestVal"
-msgstr ""
 
 #: tfrmmain.gbstatus.caption
 msgid "Status"
@@ -529,21 +596,54 @@ msgstr "nach"
 msgid "Log separator"
 msgstr "Trennzeichen"
 
+#: tfrmmain.label3.caption
+msgctxt "tfrmmain.label3.caption"
+msgid "Cutoff Voltage"
+msgstr "Endspannung"
+
 #: tfrmmain.lblcapi.caption
 msgid "CapI/EneI"
 msgstr "CapI/EneI"
+
+#: tfrmmain.lblcells.caption
+msgctxt "tfrmmain.lblcells.caption"
+msgid "Ce&lls"
+msgstr "Ze&llen"
+
+#: tfrmmain.lblchargev.caption
+msgctxt "tfrmmain.lblchargev.caption"
+msgid "&Voltage"
+msgstr "S&pannung"
+
+#: tfrmmain.lblcuta.caption
+msgid "C&utoff current"
+msgstr "Endstrom"
 
 #: tfrmmain.lblcutcap.caption
 msgid "Ah"
 msgstr "AH"
 
+#: tfrmmain.lblcutcap2.caption
+msgid "Cutoff Capacity"
+msgstr "Endkapazität"
+
 #: tfrmmain.lblcutenergy.caption
 msgid "Wh"
 msgstr "WH"
 
+#: tfrmmain.lblcutenergy2.caption
+msgctxt "tfrmmain.lblcutenergy2.caption"
+msgid "Cutoff energ&y"
+msgstr "Endenergie"
+
 #: tfrmmain.lblcutoffv1.caption
 msgid "V"
 msgstr "V"
+
+#: tfrmmain.lblcuttime.caption
+msgctxt "tfrmmain.lblcuttime.caption"
+msgid "Max time (min)"
+msgstr "Max Zeit (Min)"
 
 #: tfrmmain.lblmin.caption
 msgid "&minutes"
@@ -560,11 +660,16 @@ msgstr "Teste"
 #: tfrmmain.lblstepnum.caption
 msgctxt "tfrmmain.lblstepnum.caption"
 msgid "0"
-msgstr ""
+msgstr "-"
 
 #: tfrmmain.lbltestunit.caption
 msgid "A"
 msgstr "A"
+
+#: tfrmmain.lbltestval.caption
+msgctxt "tfrmmain.lbltestval.caption"
+msgid "TestVal"
+msgstr ""
 
 #: tfrmmain.lbltimer.caption
 msgctxt "tfrmmain.lbltimer.caption"
@@ -588,7 +693,6 @@ msgid "WH"
 msgstr "WH"
 
 #: tfrmmain.memsteplog.columns[4].title.caption
-#, fuzzy
 msgctxt "tfrmmain.memsteplog.columns[4].title.caption"
 msgid "Time"
 msgstr "Zeit"
@@ -619,8 +723,6 @@ msgid "&Help"
 msgstr "&Hilfe"
 
 #: tfrmmain.mmm_language.caption
-#, fuzzy
-#| msgid "Language"
 msgid "La&nguage"
 msgstr "Sprache"
 
@@ -701,7 +803,7 @@ msgid "&Shortcuts"
 msgstr "Ta&ststaturkürzel"
 
 #: tfrmmain.mm_skipstep.caption
-msgid "&Skip Step"
+msgid "Skip Step"
 msgstr "&Schritt abbrechen"
 
 #: tfrmmain.mm_skipstep.hint
@@ -709,11 +811,11 @@ msgid "Abort the current step and continue with the next one"
 msgstr "Aktuellen Schritt abbrechen und mit nächstem fortfahren"
 
 #: tfrmmain.mm_stepedit.caption
-msgid "&Edit Stepfile"
+msgid "Edit Stepfile"
 msgstr "Schrittdatei &ändern"
 
 #: tfrmmain.mm_stepload.caption
-msgid "&Load Stepfile"
+msgid "Load Stepfile"
 msgstr "Schrittdatei &laden"
 
 #: tfrmmain.mm_taskbarname.caption
@@ -737,20 +839,36 @@ msgid "Toggle monitor mode, showing current voltage and current while not chargi
 msgstr "Umschalten Monitor-Mode, Anzeigen aktuelle Spannung/Strom wenn Laden/Entladen nicht aktiv ist"
 
 #: tfrmmain.tscharge.caption
-msgid "Char&ge"
-msgstr "&Laden"
+msgid "Charge"
+msgstr "Laden"
+
+#: tfrmmain.tscharge.hint
+msgid "Charge - Ctrl F1"
+msgstr "Laden - Strg F1"
 
 #: tfrmmain.tsconsole.caption
-msgid "Conso&le"
-msgstr "Konso&le"
+msgid "Console"
+msgstr "Konsole"
+
+#: tfrmmain.tsconsole.hint
+msgid "Console - Ctrl F4"
+msgstr "Konsole - Strg F4"
 
 #: tfrmmain.tsdischarge.caption
-msgid "D&ischarge"
-msgstr "&Entladen"
+msgid "Discharge"
+msgstr "Entladen"
+
+#: tfrmmain.tsdischarge.hint
+msgid "Discharge - Ctrl F2"
+msgstr "Entladen - Strg F2"
 
 #: tfrmmain.tsprogram.caption
-msgid "Ste&ps"
-msgstr "Schri&tte"
+msgid "Steps"
+msgstr "Schritte"
+
+#: tfrmmain.tsprogram.hint
+msgid "Steps - Ctrl F3"
+msgstr "Schritte - Strg F3"
 
 #: tfrmsettings.cancelbutton.caption
 msgctxt "tfrmsettings.cancelbutton.caption"
@@ -784,13 +902,11 @@ msgid "&Startup behavior"
 msgstr "&Startverhalten"
 
 #: tfrmshortcuts.caption
-#, fuzzy
 msgctxt "tfrmshortcuts.caption"
 msgid "Shortcut keys"
 msgstr "Tastaturkürzel"
 
 #: tfrmstep.caption
-#, fuzzy
 msgctxt "tfrmstep.caption"
 msgid "Unsaved"
 msgstr "nicht gespeichert"
@@ -836,17 +952,18 @@ msgstr ""
 msgid "Loop"
 msgstr ""
 
-#: tfrmstep.menuitem7.caption
-msgid "&Add"
-msgstr ""
-
 #: tfrmstep.menuitem8.caption
 msgid "CC discharge"
-msgstr ""
+msgstr "Entladen Konstantstrom"
 
 #: tfrmstep.menuitem9.caption
 msgid "CP discharge"
-msgstr ""
+msgstr "Entladen Konstantleistung"
+
+#: tfrmstep.mniadd.caption
+msgctxt "tfrmstep.mniadd.caption"
+msgid "&Add"
+msgstr "&Hinzufügen"
 
 #: tfrmstep.mniexit.caption
 msgid "&Exit"
@@ -871,4 +988,27 @@ msgstr "Speichern &unter..."
 #: tfrmstep.okbutton.caption
 msgctxt "tfrmstep.okbutton.caption"
 msgid "&Ok"
+msgstr "&Ok"
+
+#: tfrmstepadd_loop.cancelbutton.caption
+msgctxt "tfrmstepadd_loop.cancelbutton.caption"
+msgid "Cancel"
+msgstr "Abbrechen"
+
+#: tfrmstepadd_loop.caption
+msgid "Add loop"
+msgstr "Loop Hinzufügen"
+
+#: tfrmstepadd_loop.lblcapienei.caption
+msgid "&CapI/EneI:"
 msgstr ""
+
+#: tfrmstepadd_loop.lblloopcount.caption
+msgid "&Loop count:"
+msgstr "Anzahl loops:"
+
+#: tfrmstepadd_loop.okbutton.caption
+msgctxt "tfrmstepadd_loop.okbutton.caption"
+msgid "&Ok"
+msgstr "&Ok"
+

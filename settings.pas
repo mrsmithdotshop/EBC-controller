@@ -37,6 +37,7 @@ type
     procedure cgSettingsItemClick(Sender: TObject; Index: integer);
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
+    procedure LoadRecourcestrings;
   private
 
   public
@@ -50,7 +51,42 @@ implementation
 
 {$R *.lfm}
 
+Resourcestring
+  cstAutoLoad = '&Autoload program file';
+  cstRememberSaveDir = '&Remember save directory';
+  cstRememberAutoLog = 'Remember &CSV file for automatic logging';
+  cstRememberStepDir = 'Remember s&tep file directory';
+  cstForceMon = '&Force monitor mode after cycle end';
+  cstLogRecData = '&Log received data to console';
+  cstIgnoreCRC = '&Ignore CRC';
+  cstTaskbarCsvPrefix = 'use taskbar name as csv file name &prefix';
+
+  cstLoadLastSettings = 'Load last settings';
+  cstUseDefaultSettings = 'Use default settings';
+  cstUseSelection2 = 'Use selection 2';
+  cstUseSelection3 = 'Use selection 3';
+
+
 { TfrmSettings }
+
+procedure TfrmSettings.LoadRecourcestrings;
+begin
+  cgSettings.Items.Clear;
+  cgSettings.Items.Add(cstAutoLoad);
+  cgSettings.Items.Add(cstRememberSaveDir);
+  cgSettings.Items.Add(cstRememberAutoLog);
+  cgSettings.Items.Add(cstRememberStepDir);
+  cgSettings.Items.Add(cstForceMon);
+  cgSettings.Items.Add(cstLogRecData);
+  cgSettings.Items.Add(cstIgnoreCRC);
+  cgSettings.Items.Add(cstTaskbarCsvPrefix);
+
+  rgStart.Items.Clear;
+  rgStart.Items.Add(cstLoadLastSettings);
+  rgStart.Items.Add(cstUseDefaultSettings);
+  rgStart.Items.Add(cstUseSelection2);
+  rgStart.Items.Add(cstUseSelection3);
+end;
 
 procedure TfrmSettings.cgSettingsClick(Sender: TObject);
 begin
@@ -70,6 +106,7 @@ end;
 procedure TfrmSettings.FormCreate(Sender: TObject);
 begin
   //cgSettings.CheckEnabled[cCaptureSettings] := False;
+  LoadRecourcestrings;
 end;
 
 procedure TfrmSettings.FormShow(Sender: TObject);

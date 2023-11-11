@@ -8,7 +8,7 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, IpHtml,
-  menus,lclproc,ExtCtrls,StdCtrls;
+  menus,lclproc,ExtCtrls,StdCtrls,ComCtrls;
 
 type
 
@@ -116,7 +116,10 @@ var
 
   procedure addKeyC(c : TComponent);
   begin
-    if c is TMenuItem then
+    if c is TTabSheet then
+      with TTabSheet(c) do
+        addKey('',Hint)
+    else if c is TMenuItem then
       with TMenuItem(c) do
         addKeyC2(Caption,Hint,ShortCut)
     else if c is TButton then

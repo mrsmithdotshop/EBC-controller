@@ -15,8 +15,9 @@ uses
 
 procedure poSetSearchDirs(Dirs: string = '');                // search dirs separated by , ; or :
 function poGetProgramBaseName : string;                        // name of program w/o path and extension
-procedure poSelectLanguageMenuClick(Sender: TObject);          // extract lang from menu entry and set the language
+function poSelectLanguageMenuClick(Sender: TObject) : string;          // extract lang from menu entry and set the language
 procedure poGenerateLanguageSelectMenuEntries(base: TMenuItem; p: TNotifyEvent);
+function setLanguage(s: String): String;
 
 implementation
 
@@ -238,11 +239,12 @@ begin
 end;
 
 // extract the language from a menu item and activate the language
-procedure poSelectLanguageMenuClick(Sender: TObject);
+function poSelectLanguageMenuClick(Sender: TObject) : string;
 var
  s: string;
  p: integer;
 begin
+  result := '';
   if sender is TMenuItem then
   begin
     s := TMenuItem(Sender).Caption;
@@ -254,12 +256,20 @@ begin
       if p > 0 then
       begin
         delete(s,p,length(s));
-        SetDefaultLang(s);
+        SetLanguage(s);
+        result := s;
       end;
     end;
   end;
 end;
 
+
+function setLanguage(s: String): String;
+begin
+  SetDefaultLang(s,'locale','lclstrconsts',true);
+  SetDefaultLang(s,'locale','',true);
+  result := s;
+end;
 
 function poFindPoFile(baseName,IsoLanguage: string): string;
 var

@@ -625,9 +625,8 @@ object frmStep: TfrmStep
         OnClick = mniExitClick
       end
     end
-    object MenuItem7: TMenuItem
+    object mniAdd: TMenuItem
       Caption = '&Add'
-      Enabled = False
       object MenuItem8: TMenuItem
         Caption = 'CC discharge'
       end

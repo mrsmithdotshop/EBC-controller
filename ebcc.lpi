@@ -248,7 +248,7 @@
         <PackageName Value="LCL"/>
       </Item7>
     </RequiredPackages>
-    <Units Count="8">
+    <Units Count="9">
       <Unit0>
         <Filename Value="ebcc.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -301,6 +301,12 @@
         <Filename Value="lineparser.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit7>
+      <Unit8>
+        <Filename Value="stepadd_loop.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="frmStepAdd_Loop"/>
+        <ResourceBaseClass Value="Form"/>
+      </Unit8>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

@@ -8,7 +8,7 @@ uses
   {$ENDIF}{$ENDIF}
   Interfaces, // this includes the LCL widgetset
   Forms, tachartlazaruspkg, main, LazSerialPort, StepForm, settings,
-  aboutForm, shortcuthelpform, lineparser;
+  aboutForm, shortcuthelpform, lineparser, stepadd_loop;
   { you can add units after this }
 
 {$R *.res}
