@@ -1,0 +1,144 @@
+#!/bin/bash
+#
+# Build ebcc releases for Linux and Windows from Linux
+# AD 12 Nov 2023
+#
+
+PRJ=ebcc
+LAZHOME=/home/ad/lazarus-snap/lazarus
+FPC=/usr/local/bin/fpc
+LAZBUILD=$LAZHOME/lazbuild
+
+REL=`cat main.pas | grep  "cVersion =" | awk -F \' '{ print $2 }'`
+[ $REL. == . ] && cat main.pas | grep  "cVersion=" | awk -F \' '{ print $2 }'
+
+if [ $REL. == . ]; then
+        echo "Version not found in main.pas"
+        exit 1
+fi
+
+RELDIR=$(readlink -f release/$REL)
+NAME=ebcc
+MAIN=$NAME.lpr
+BUILD_DIR=temp_build
+SUBDIRS=$BUILD_DIR/locale
+
+TGTS=(Release Win64-Release)
+TGTS_EXE=(ebcc ebcc.exe)
+TGTS_FILES="ebcc.init README.md"
+TGTS_FILE=($RELDIR/$NAME-$REL.tar.gz $RELDIR/$NAME-$REL.zip)
+TGTS_FMT=(targz zip)
+BUILD_CMD="$LAZBUILD -B --lazarusdir=$LAZHOME --compiler=$FPC"
+
+
+MAJOR_VER=`cat $NAME.lpi | grep "<MajorVersionNr Value=" | awk -F\" '{print $2}'`
+MINOR_VER=`cat $NAME.lpi | grep "<MinorVersionNr Value=" | awk -F\" '{print $2}'`
+WINVER="$MAJOR_VER.$MINOR_VER"
+
+if [ $WINVER. != $REL. ]; then
+	echo "Version from project settings ($WINVER) differs from version in main.pas ($REL)"
+	exit 1
+fi
+
+if [ -d $RELDIR ]; then
+	echo "$RELDIR already exists"
+	exit 1
+fi
+
+echo -n "Building relase $REL for "
+
+if ! mkdir -p $RELDIR; then
+	echo "Failed to create $RELDIR"
+	exit 1
+fi
+
+
+STEPS="0 1"
+for i in $STEPS; do
+	echo -n ${TGTS[i]} " "
+done
+echo
+
+cd locale || exit 1
+for i in *.po; do
+	o="${i%.*}.mo"
+	echo "Compiling $i to $o"
+	msgfmt -v -o $o $i || exit 1
+done
+cd ..
+
+for i in $STEPS; do
+	echo "Building ${TGTS[i]}"
+	if [ -d $BUILD_DIR ]; then
+		echo " Removing $BUILD_DIR"
+        	if ! rm -rf $BUILD_DIR; then
+			echo "failed to remove $BUILD_DIR"
+			rm -rf $RELDIR
+			exit 1
+		fi
+	fi
+	if ! mkdir -p $SUBDIRS; then
+		echo "Failed to create dirs $SUBDIRS"
+		rm -rf $RELDIR
+		exit 1
+	fi
+	if ! cp locale/*.mo $BUILD_DIR/locale; then
+		echo "Failed to copy mo files"
+		rm -rf $RELDIR
+		exit 1
+	fi
+	if ! cp locale/*.mo $BUILD_DIR/locale; then
+		echo "feiled to copy locale/*.mp to $BUILD_DIR/locale"
+		rm -rf $RELDIR
+		exit 1
+	fi
+	if ! cp ${TGTS_EXE[i]} $BUILD_DIR; then
+		echo "failed to copy {TGTS_EXE[i]}to $BUILD_DIR"
+		rm -rf $RELDIR
+		exit 1
+	fi
+	for f in $TGTS_FILES; do
+		if ! cp $f $BUILD_DIR; then
+			echo "failed to copy $f to $BUILD_DIR"
+			rm -rf $RELDIR
+			exit 1
+		fi
+	done
+	cmd="$BUILD_CMD --build-mode=${TGTS[i]} $MAIN"
+	echo " executing $cmd"
+	if ! eval "$cmd"; then
+                echo " failed"
+                rm -rf $RELDIR
+                exit 1
+        fi
+
+	echo "Creating ${TGTS_FMT[i]} for ${TGTS[i]}"
+	pushd $BUILD_DIR 2>&1 >/dev/null
+	case ${TGTS_FMT[i]} in
+		zip) 
+			if ! zip -r -9 ${TGTS_FILE[i]} *; then
+				echo "zip -R ${TGTS_FILE[i]} * failed"
+				popd 2>&1 >/dev/null
+				rm -rf $RELDIR
+				exit 1
+			fi
+		;;
+		targz)
+			if ! tar c * | gzip --best > ${TGTS_FILE[i]}; then
+				echo "tar c * | gzip --best > ${TGTS_FILE[i]} failed"
+				popd 2>&1 >/dev/null
+				rm -rf $RELDIR
+				exit 1
+			fi
+		;;
+		*)
+			echo "undefined archive format (${TGTS_FMT[i]})";
+			popd 2>&1 >/dev/null
+			rm -rf $RELDIR
+			exit 1
+		;;
+
+	esac
+	popd 2>&1 >/dev/null
+
+done
