@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, ExtCtrls, StdCtrls,
-  EditBtn, JLabeledIntegerEdit;
+  EditBtn, Spin;
 
 // never ever change order as it is saved in config file
 
@@ -30,7 +30,8 @@ type
     cgSettings: TCheckGroup;
     edtProgFile: TFileNameEdit;
     grpParam: TGroupBox;
-    edtIntTime: TJLabeledIntegerEdit;
+    lblIntTime: TLabel;
+    edtIntTime: TSpinEdit;
     rgStart: TRadioGroup;
     procedure OkButtonClick(Sender: TObject);
     procedure cgSettingsClick(Sender: TObject);
@@ -95,7 +96,7 @@ end;
 
 procedure TfrmSettings.OkButtonClick(Sender: TObject);
 begin
-  if edtIntTime.Value < 2 then edtIntTime.Value := 2;
+   ModalResult := mrOK;
 end;
 
 procedure TfrmSettings.cgSettingsItemClick(Sender: TObject; Index: integer);
